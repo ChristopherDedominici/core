@@ -265,8 +265,8 @@ describe("NodeOperatorsRegistry.sol:ExitManager", () => {
     let cutoff: bigint;
 
     beforeEach(async () => {
-      await deployer.provider.send("hardhat_mine", [
-        `0x${(BigInt(await deployer.provider.getBlockNumber()) + 3000n).toString(16)}`,
+      await ethers.provider.send("hardhat_mine", [
+        `0x${(BigInt(await ethers.provider.getBlockNumber()) + 3000n).toString(16)}`,
         12000,
       ]);
 
@@ -278,7 +278,7 @@ describe("NodeOperatorsRegistry.sol:ExitManager", () => {
       cutoff = BigInt(await nor.exitPenaltyCutoffTimestamp());
 
       // Get the block timestamp of the transaction
-      const block = await deployer.provider.getBlock(tx.blockNumber!);
+      const block = await ethers.provider.getBlock(tx.blockNumber!);
       const expectedCutoff = BigInt(block!.timestamp) - exitDeadlineThreshold - reportingWindow;
 
       // Ensure cutoff was set correctly

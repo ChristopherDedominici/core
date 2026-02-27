@@ -13,7 +13,6 @@ import { ether, ONE_ETHER } from "lib/units.js";
 import { deployLidoDao } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
-const { mine } = networkHelpers;
 
 describe("Lido.sol:staking-limit", () => {
   let deployer: HardhatEthersSigner;
@@ -70,7 +69,7 @@ describe("Lido.sol:staking-limit", () => {
       const fullReplenishInBlocks = maxStakeLimit / stakeLimitIncreasePerBlock;
 
       for (let i = 1n; i <= fullReplenishInBlocks; i++) {
-        await mine(1);
+        await networkHelpers.mine(1);
         expect(await lido.getCurrentStakeLimit()).to.equal(stakeLimitIncreasePerBlock * i);
       }
     });
@@ -163,7 +162,7 @@ describe("Lido.sol:staking-limit", () => {
       expect(await lido.getStakeLimitFullInfo()).to.deep.equal(Object.values(expected));
 
       for (let i = 1n; i <= expected.maxStakeLimitGrowthBlocks; i++) {
-        await mine(1);
+        await networkHelpers.mine(1);
         expected.currentStakeLimit = (expected.maxStakeLimit / expected.maxStakeLimitGrowthBlocks) * i;
         expect(await lido.getStakeLimitFullInfo()).to.deep.equal(Object.values(expected));
       }

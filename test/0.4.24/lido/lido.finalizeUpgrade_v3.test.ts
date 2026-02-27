@@ -23,7 +23,6 @@ import { ether } from "lib/units.js";
 import { deployLidoLocator } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
-const { time } = networkHelpers;
 
 describe("Lido.sol:finalizeUpgrade_v3", () => {
   let deployer: HardhatEthersSigner;
@@ -99,7 +98,7 @@ describe("Lido.sol:finalizeUpgrade_v3", () => {
 
   context("initialized", () => {
     before(async () => {
-      const latestBlock = BigInt(await time.latestBlock());
+      const latestBlock = BigInt(await networkHelpers.time.latestBlock());
 
       await lido.connect(deployer).harness_initialize_v2(locator, { value: initialValue });
 

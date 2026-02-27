@@ -14,7 +14,6 @@ import { proxify } from "lib/proxy.js";
 import { deployLidoLocator } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
-const { setStorageAt, time } = networkHelpers;
 
 describe("Lido.sol:initialize", () => {
   let deployer: HardhatEthersSigner;
@@ -67,7 +66,7 @@ describe("Lido.sol:initialize", () => {
     });
 
     it("Bootstraps initial holder, sets the locator and EIP-712 helper", async () => {
-      const latestBlock = BigInt(await time.latestBlock());
+      const latestBlock = BigInt(await networkHelpers.time.latestBlock());
 
       await expect(lido.initialize(locator, eip712helperAddress, { value: initialValue }))
         .to.emit(lido, "Submitted")
@@ -95,7 +94,7 @@ describe("Lido.sol:initialize", () => {
 
     it("Does not bootstrap initial holder if total shares is not zero", async () => {
       const totalSharesSlot = streccak("lido.StETH.totalAndExternalShares");
-      await setStorageAt(await lido.getAddress(), totalSharesSlot, 1n);
+      await networkHelpers.setStorageAt(await lido.getAddress(), totalSharesSlot, 1n);
 
       await expect(lido.initialize(locator, eip712helperAddress, { value: initialValue }))
         .not.to.emit(lido, "Submitted")

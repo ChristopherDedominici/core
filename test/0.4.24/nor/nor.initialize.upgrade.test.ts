@@ -13,7 +13,6 @@ import { RewardDistributionState } from "lib/nor.js";
 import { addAragonApp, deployLidoDao, deployLidoLocator } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
-const { time } = networkHelpers;
 
 describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
   let deployer: HardhatEthersSigner;
@@ -108,7 +107,7 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
 
     it("Makes the contract initialized to v4", async () => {
       const burnerAddress = await locator.burner();
-      const latestBlock = BigInt(await time.latestBlock());
+      const latestBlock = BigInt(await networkHelpers.time.latestBlock());
 
       await expect(nor.initialize(locator, moduleType, 86400n))
         .to.emit(nor, "ContractVersionSet")
@@ -201,7 +200,7 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
       expect(await nor.exitDeadlineThreshold(0)).to.equal(86400n);
 
       // Verify exit penalty cutoff timestamp is set correctly (this is done in _setExitDeadlineThreshold)
-      const currentTimestamp = await time.latest();
+      const currentTimestamp = await networkHelpers.time.latest();
       expect(await nor.exitPenaltyCutoffTimestamp()).to.be.lte(currentTimestamp);
     });
   });
@@ -231,7 +230,7 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
     });
 
     it("Reverts when sum of threshold and reporting window causes underflow", async () => {
-      const currentTime = await time.latest();
+      const currentTime = await networkHelpers.time.latest();
       const threshold = BigInt(currentTime) + 1000n; // Future timestamp
       const reportingWindow = 1000n;
 
@@ -262,14 +261,14 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
 
       expect(await nor.exitDeadlineThreshold(0)).to.equal(threshold);
 
-      const currentTime = BigInt(await time.latest());
+      const currentTime = BigInt(await networkHelpers.time.latest());
       const actualCutoff = await nor.exitPenaltyCutoffTimestamp();
       expect(actualCutoff).to.be.closeTo(currentTime - 1n, 5n);
     });
 
     it("Prevents underflow scenario", async () => {
       // Simulate scenario where _threshold + _lateReportingWindow > block.timestamp
-      const currentTime = BigInt(await time.latest());
+      const currentTime = BigInt(await networkHelpers.time.latest());
 
       // This should fail due to underflow protection
       await expect(
@@ -303,10 +302,10 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
       const currentCutoff = await nor.exitPenaltyCutoffTimestamp();
 
       // Advance time a bit
-      await time.increase(3600); // 1 hour
+      await networkHelpers.time.increase(3600); // 1 hour
 
       // Calculate parameters that would result in the same cutoff timestamp
-      const newCurrentTime = BigInt(await time.latest());
+      const newCurrentTime = BigInt(await networkHelpers.time.latest());
       const targetCutoff = currentCutoff;
       const newThreshold = 43200n; // 12 hours
       const newReportingWindow = newCurrentTime - targetCutoff - newThreshold;

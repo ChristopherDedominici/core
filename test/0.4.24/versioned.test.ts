@@ -30,13 +30,13 @@ describe("Versioned.sol", () => {
   it("Implementation is petrified.", async () => {
     const petrifiedVersion = await impl.getPetrifiedVersionMark();
     expect(await impl.getContractVersion()).to.equal(petrifiedVersion);
-    await expect(impl.checkContractVersion(petrifiedVersion)).not.to.be.revertedWith("UNEXPECTED_CONTRACT_VERSION");
+    await expect(impl.checkContractVersion(petrifiedVersion)).not.to.revertedWith("UNEXPECTED_CONTRACT_VERSION");
     await expect(impl.checkContractVersion(DEFAULT_VERSION)).to.be.revertedWith("UNEXPECTED_CONTRACT_VERSION");
   });
 
   it("Default version is zero.", async () => {
     expect(await versioned.getContractVersion()).to.equal(DEFAULT_VERSION);
-    await expect(versioned.checkContractVersion(DEFAULT_VERSION)).not.to.be.revertedWith("UNEXPECTED_CONTRACT_VERSION");
+    await expect(versioned.checkContractVersion(DEFAULT_VERSION)).not.to.revertedWith("UNEXPECTED_CONTRACT_VERSION");
     await expect(versioned.checkContractVersion(INIT_VERSION)).to.be.revertedWith("UNEXPECTED_CONTRACT_VERSION");
   });
 
@@ -48,7 +48,7 @@ describe("Versioned.sol", () => {
       .withArgs(nextVersion);
 
     expect(await versioned.getContractVersion()).to.equal(nextVersion);
-    await expect(versioned.checkContractVersion(nextVersion)).not.to.be.revertedWith("UNEXPECTED_CONTRACT_VERSION");
+    await expect(versioned.checkContractVersion(nextVersion)).not.to.revertedWith("UNEXPECTED_CONTRACT_VERSION");
     await expect(versioned.checkContractVersion(previousVersion)).to.be.revertedWith("UNEXPECTED_CONTRACT_VERSION");
   });
 });
