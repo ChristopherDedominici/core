@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { OssifiableProxy, Versioned__Harness0424 } from "typechain-types";
+import type { OssifiableProxy, Versioned__Harness0424 } from "typechain-types/index.js";
+
+import { ethers } from "lib/hardhat.js";
 
 // TODO: rewrite to be reusable for any derived contract
 describe("Versioned.sol", () => {

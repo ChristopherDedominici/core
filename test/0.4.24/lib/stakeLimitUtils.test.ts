@@ -1,13 +1,14 @@
 import { expect } from "chai";
-import { ContractTransactionResponse } from "ethers";
-import { ethers } from "hardhat";
+import { type ContractTransactionResponse } from "ethers";
 
-import { mineUpTo } from "@nomicfoundation/hardhat-network-helpers";
-import { latestBlock } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time";
+import type { StakeLimitUnstructuredStorage__Harness, StakeLimitUtils__Harness } from "typechain-types/index.js";
 
-import { StakeLimitUnstructuredStorage__Harness, StakeLimitUtils__Harness } from "typechain-types";
+import { ethers, networkHelpers } from "lib/hardhat.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
+
+const { mineUpTo } = networkHelpers;
+const { latestBlock } = networkHelpers.time;
 
 describe("StakeLimitUtils.sol", () => {
   let stakeLimitUnstructuredStorage: StakeLimitUnstructuredStorage__Harness;
@@ -429,10 +430,10 @@ describe("StakeLimitUtils.sol", () => {
 
     context("update", () => {
       it("reverts on bad input", async () => {
-        await expect(stakeLimitUtils.updatePrevStakeLimit(2n ** 96n)).revertedWithoutReason();
+        await expect(stakeLimitUtils.updatePrevStakeLimit(2n ** 96n)).revertedWithoutReason(ethers);
 
         await stakeLimitUtils.harness_setState(0n, prevStakeLimit, maxStakeLimitGrowthBlocks, maxStakeLimit);
-        await expect(stakeLimitUtils.updatePrevStakeLimit(10n)).revertedWithoutReason();
+        await expect(stakeLimitUtils.updatePrevStakeLimit(10n)).revertedWithoutReason(ethers);
       });
 
       it("works for regular cases", async () => {

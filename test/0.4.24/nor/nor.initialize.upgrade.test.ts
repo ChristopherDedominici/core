@@ -1,16 +1,19 @@
 import { expect } from "chai";
 import { encodeBytes32String, MaxUint256, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { ACL, Kernel, Lido, LidoLocator, NodeOperatorsRegistry__Harness } from "typechain-types";
+import type { ACL } from "typechain-types/@aragon/os/contracts/acl/ACL.js";
+import type { Kernel } from "typechain-types/@aragon/os/contracts/kernel/Kernel.js";
+import { type Lido, type LidoLocator, type NodeOperatorsRegistry__Harness } from "typechain-types/index.js";
 
-import { RewardDistributionState } from "lib";
+import { ethers, networkHelpers } from "lib/hardhat.js";
+import { RewardDistributionState } from "lib/nor.js";
 
-import { addAragonApp, deployLidoDao, deployLidoLocator } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { addAragonApp, deployLidoDao, deployLidoLocator } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
+
+const { time } = networkHelpers;
 
 describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
   let deployer: HardhatEthersSigner;
@@ -48,7 +51,7 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
     const allocLib = await ethers.deployContract("MinFirstAllocationStrategy", deployer);
     const norHarnessFactory = await ethers.getContractFactory("NodeOperatorsRegistry__Harness", {
       libraries: {
-        ["contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
+        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
       },
     });
 
@@ -88,7 +91,7 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
     });
 
     it("Reverts if Locator is zero address", async () => {
-      await expect(nor.initialize(ZeroAddress, moduleType, 86400n)).to.be.reverted;
+      await expect(nor.initialize(ZeroAddress, moduleType, 86400n)).to.revert(ethers);
     });
 
     it("Reverts if was initialized with v1", async () => {
