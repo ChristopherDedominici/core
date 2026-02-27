@@ -1,10 +1,9 @@
-import { ethers } from "hardhat";
+import { ethers } from "lib/hardhat.js";
+import { ether } from "lib/units.js";
 
-import { ether } from "lib";
+import { deployWithdrawalQueue } from "test/deploy/index.js";
 
-import { deployWithdrawalQueue } from "test/deploy";
-
-import { testERC721Compliance } from "../common/erc721.test";
+import { testERC721Compliance } from "../common/erc721.test.js";
 
 testERC721Compliance({
   tokenName: "unstETH NFT",

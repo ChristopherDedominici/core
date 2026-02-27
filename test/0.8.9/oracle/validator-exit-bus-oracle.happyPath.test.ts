@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import { ZeroHash } from "ethers";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { HashConsensus__Harness, ValidatorsExitBus__Harness } from "typechain-types";
+import type { HashConsensus__Harness, ValidatorsExitBus__Harness } from "typechain-types/index.js";
 
-import { de0x, numberToHex, VEBO_CONSENSUS_VERSION } from "lib";
+import { VEBO_CONSENSUS_VERSION } from "lib/constants.js";
+import { ethers } from "lib/hardhat.js";
+import { de0x, numberToHex } from "lib/string.js";
 
 import {
   computeTimestampAtSlot,
@@ -15,7 +16,7 @@ import {
   initVEBO,
   SECONDS_PER_FRAME,
   SLOTS_PER_FRAME,
-} from "test/deploy";
+} from "test/deploy/index.js";
 
 const PUBKEYS = [
   "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",

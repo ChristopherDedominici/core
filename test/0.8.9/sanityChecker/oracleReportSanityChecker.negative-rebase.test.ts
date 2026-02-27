@@ -1,21 +1,23 @@
 import { expect } from "chai";
 import { parseUnits, ZeroAddress } from "ethers";
-import { artifacts, ethers } from "hardhat";
 
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
-import {
+import type {
   Accounting__MockForSanityChecker,
   AccountingOracle__MockForSanityChecker,
   LidoLocator__MockForSanityChecker,
   OracleReportSanityChecker,
   StakingRouter__MockForSanityChecker,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { ether, getCurrentBlockTimestamp, impersonate } from "lib";
+import { impersonate } from "lib/account.js";
+import { artifacts, ethers } from "lib/hardhat.js";
+import { getCurrentBlockTimestamp } from "lib/time.js";
+import { ether } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 const SLOTS_PER_DAY = 7200n;
 
@@ -471,7 +473,7 @@ describe("OracleReportSanityChecker.sol:negative-rebase", () => {
       );
 
       await checker.grantRole(role, deployer.address);
-      await expect(checker.setInitialSlashingAndPenaltiesAmount(1000, 101)).to.not.be.reverted;
+      await expect(checker.setInitialSlashingAndPenaltiesAmount(1000, 101)).to.not.revert(ethers);
     });
 
     it("CL Oracle related functions require SECOND_OPINION_MANAGER_ROLE", async () => {
@@ -482,7 +484,7 @@ describe("OracleReportSanityChecker.sol:negative-rebase", () => {
       ).to.be.revertedWithOZAccessControlError(deployer.address, clOraclesRole);
 
       await checker.grantRole(clOraclesRole, deployer.address);
-      await expect(checker.setSecondOpinionOracleAndCLBalanceUpperMargin(ZeroAddress, 74)).to.not.be.reverted;
+      await expect(checker.setSecondOpinionOracleAndCLBalanceUpperMargin(ZeroAddress, 74)).to.not.revert(ethers);
     });
   });
 });

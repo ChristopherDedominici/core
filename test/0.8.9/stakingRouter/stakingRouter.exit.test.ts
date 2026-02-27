@@ -1,18 +1,21 @@
 import { expect } from "chai";
 import { hexlify, randomBytes } from "ethers";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   DepositContract__MockForBeaconChainDepositor,
   StakingModule__MockForTriggerableWithdrawals,
   StakingRouter__Harness,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { certainAddress, ether, proxify, randomString } from "lib";
+import { certainAddress } from "lib/address.js";
+import { ethers } from "lib/hardhat.js";
+import { proxify } from "lib/proxy.js";
+import { randomString } from "lib/string.js";
+import { ether } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("StakingRouter.sol:exit", () => {
   let deployer: HardhatEthersSigner;
@@ -45,7 +48,8 @@ describe("StakingRouter.sol:exit", () => {
     const allocLib = await ethers.deployContract("MinFirstAllocationStrategy", deployer);
     const stakingRouterFactory = await ethers.getContractFactory("StakingRouter__Harness", {
       libraries: {
-        ["contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
+        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]:
+          await allocLib.getAddress(),
       },
     });
 
@@ -99,7 +103,7 @@ describe("StakingRouter.sol:exit", () => {
     it("calls reportValidatorExitDelay on the staking module", async () => {
       await expect(
         stakingModule.reportValidatorExitDelay(NODE_OPERATOR_ID, proofSlotTimestamp, publicKey, eligibleToExitInSec),
-      ).to.not.be.reverted;
+      ).to.not.revert(ethers);
 
       await expect(
         stakingRouter
@@ -111,7 +115,7 @@ describe("StakingRouter.sol:exit", () => {
             publicKey,
             eligibleToExitInSec,
           ),
-      ).to.not.be.reverted;
+      ).to.not.revert(ethers);
     });
 
     it("reverts when called by unauthorized user", async () => {
@@ -149,7 +153,7 @@ describe("StakingRouter.sol:exit", () => {
 
       await expect(
         stakingRouter.connect(reporter).onValidatorExitTriggered(validatorExitData, withdrawalRequestPaidFee, exitType),
-      ).to.not.be.reverted;
+      ).to.not.revert(ethers);
     });
 
     it("emits StakingModuleExitNotificationFailed when staking module reverts", async () => {
