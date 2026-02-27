@@ -28,12 +28,15 @@ export default defineConfig({
   },
   solidity: {
     npmFilesToBuild: [
-      "@openzeppelin/contracts-v5.2/proxy/beacon/UpgradeableBeacon.sol",
       "@aragon/os/contracts/acl/ACL.sol",
-      "@aragon/os/contracts/kernel/Kernel.sol",
-      "@aragon/os/contracts/lib/ens/ENS.sol",
       "@aragon/os/contracts/factory/DAOFactory.sol",
       "@aragon/os/contracts/factory/EVMScriptRegistryFactory.sol",
+      "@aragon/os/contracts/kernel/Kernel.sol",
+      "@aragon/os/contracts/lib/ens/ENS.sol",
+      "@openzeppelin/contracts-v5.2/proxy/beacon/UpgradeableBeacon.sol",
+      "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+      "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+      "@openzeppelin/contracts/token/ERC721/ERC721.sol",
     ],
     compilers: [
       {
