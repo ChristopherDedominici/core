@@ -15,8 +15,6 @@ contract DoubleRefSlotCacheExample {
 
     uint256 public refSlot;
 
-    // try/catch replicates Foundry's per-test `fail-on-revert = false`
-    // which Hardhat v3 doesn't support via inline forge-config comments
     function increaseIntValue(
         int104 increment
     ) external returns (DoubleRefSlotCache.Int104WithCache[DOUBLE_CACHE_LENGTH] memory) {
