@@ -5,6 +5,14 @@ pragma solidity >=0.4.24 <0.9.0;
 
 import {MemUtils} from "contracts/common/lib/MemUtils.sol";
 
+// Wrapper to expose MemUtils.copyBytes as an external call so that
+// vm.expectRevert can intercept the revert (it requires a lower-depth call).
+contract MemUtilsCopyBytesWrapper {
+    function copyBytes(bytes memory _src, bytes memory _dst, uint256 _srcStart, uint256 _dstStart, uint256 _len) external pure {
+        MemUtils.copyBytes(_src, _dst, _srcStart, _dstStart, _len);
+    }
+}
+
 contract MemUtilsTestHelper {
     uint256 internal constant ZERO_MEM_SLOT_PTR = 96;
 

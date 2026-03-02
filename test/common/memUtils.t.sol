@@ -7,9 +7,11 @@ import "forge-std/Test.sol";
 
 import {MemUtils} from "contracts/common/lib/MemUtils.sol";
 
-import {MemUtilsTestHelper} from "test/common/memUtils.h.sol";
+import {MemUtilsTestHelper, MemUtilsCopyBytesWrapper} from "test/common/memUtils.h.sol";
 
 contract MemUtilsTest is Test, MemUtilsTestHelper {
+    MemUtilsCopyBytesWrapper wrapper = new MemUtilsCopyBytesWrapper();
+
     function test_unsafeAllocateBytes_AllocatesEmptyByteArray() external pure {
         // disable all compiler optimizations by including an assembly block not marked as mem-safe
         assembly {
@@ -483,7 +485,6 @@ contract MemUtilsTest is Test, MemUtilsTestHelper {
         assertEq(dst, abi.encodePacked(bytes32(0x2211111111111111111111111111111111111111111111111111111111111111)));
     }
 
-    /// forge-config: default.allow_internal_expect_revert = true
     function test_copyBytes_RevertsWhenSrcArrayIsOutOfBounds() external {
         bytes memory src = abi.encodePacked(
             bytes32(0x1111111111111111111111111111111111111111111111111111111111111111)
@@ -494,6 +495,6 @@ contract MemUtilsTest is Test, MemUtilsTestHelper {
         );
 
         vm.expectRevert(bytes("BYTES_ARRAY_OUT_OF_BOUNDS"));
-        MemUtils.copyBytes(src, dst, 1, 1, 32);
+        wrapper.copyBytes(src, dst, 1, 1, 32);
     }
 }
