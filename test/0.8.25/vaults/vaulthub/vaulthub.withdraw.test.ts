@@ -804,9 +804,9 @@ describe("VaultHub.sol:withdrawal", () => {
       const newWithdrawableAfterReport = await vaultHub.withdrawableValue(connectedVault);
       expect(newWithdrawableAfterReport).to.equal(ether("4")); // 9 - 5 locked = 4
 
-      await expect(
-        vaultHub.connect(user).withdraw(connectedVault, stranger, newWithdrawableAfterReport),
-      ).to.not.revert(ethers);
+      await expect(vaultHub.connect(user).withdraw(connectedVault, stranger, newWithdrawableAfterReport)).to.not.revert(
+        ethers,
+      );
     });
 
     it("handles withdrawal after fee settlement", async () => {

@@ -150,13 +150,13 @@ describe("GIndex", () => {
   });
 
   it("test_concat_BigIndicesBorderCases", async () => {
-    await expect(
-      await library.concat(await gIndex.pack(2n ** 9n, 0), await gIndex.pack(2n ** 238n, 0)),
-    ).to.not.revert(ethers);
+    await expect(await library.concat(await gIndex.pack(2n ** 9n, 0), await gIndex.pack(2n ** 238n, 0))).to.not.revert(
+      ethers,
+    );
 
-    await expect(
-      await library.concat(await gIndex.pack(2n ** 47n, 0), await gIndex.pack(2n ** 200n, 0)),
-    ).to.not.revert(ethers);
+    await expect(await library.concat(await gIndex.pack(2n ** 47n, 0), await gIndex.pack(2n ** 200n, 0))).to.not.revert(
+      ethers,
+    );
 
     await expect(library.concat(await gIndex.pack(2n ** 199n, 0), await gIndex.pack(2n ** 48n, 0))).to.not.revert(
       ethers,

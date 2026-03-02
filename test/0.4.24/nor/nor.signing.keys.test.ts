@@ -116,7 +116,8 @@ describe("NodeOperatorsRegistry.sol:signing-keys", () => {
     const allocLib = await ethers.deployContract("MinFirstAllocationStrategy", deployer);
     const norHarnessFactory = await ethers.getContractFactory("NodeOperatorsRegistry__Harness", {
       libraries: {
-        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
+        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]:
+          await allocLib.getAddress(),
       },
     });
 

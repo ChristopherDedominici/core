@@ -186,9 +186,7 @@ describe("BaseOracle.sol:consensus", () => {
     });
 
     it("Checks correct data without errors", async () => {
-      await expect(baseOracle.checkConsensusData(initialRefSlot, BASE_CONSENSUS_VERSION, HASH_1)).not.to.revert(
-        ethers,
-      );
+      await expect(baseOracle.checkConsensusData(initialRefSlot, BASE_CONSENSUS_VERSION, HASH_1)).not.to.revert(ethers);
     });
   });
 

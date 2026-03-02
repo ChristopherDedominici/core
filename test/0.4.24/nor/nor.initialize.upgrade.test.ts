@@ -13,7 +13,6 @@ import { RewardDistributionState } from "lib/nor.js";
 import { addAragonApp, deployLidoDao, deployLidoLocator } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
-
 describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;
@@ -50,7 +49,8 @@ describe("NodeOperatorsRegistry.sol:initialize-and-upgrade", () => {
     const allocLib = await ethers.deployContract("MinFirstAllocationStrategy", deployer);
     const norHarnessFactory = await ethers.getContractFactory("NodeOperatorsRegistry__Harness", {
       libraries: {
-        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
+        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]:
+          await allocLib.getAddress(),
       },
     });
 

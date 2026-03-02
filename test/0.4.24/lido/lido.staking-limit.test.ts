@@ -13,7 +13,6 @@ import { ether, ONE_ETHER } from "lib/units.js";
 import { deployLidoDao } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
-
 describe("Lido.sol:staking-limit", () => {
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;

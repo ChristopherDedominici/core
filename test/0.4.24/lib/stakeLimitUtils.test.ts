@@ -7,7 +7,6 @@ import { ethers, networkHelpers } from "lib/hardhat.js";
 
 import { Snapshot } from "test/suite/index.js";
 
-
 describe("StakeLimitUtils.sol", () => {
   let stakeLimitUnstructuredStorage: StakeLimitUnstructuredStorage__Harness;
   let stakeLimitUtils: StakeLimitUtils__Harness;

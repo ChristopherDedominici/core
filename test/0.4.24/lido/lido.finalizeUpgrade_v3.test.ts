@@ -23,7 +23,6 @@ import { ether } from "lib/units.js";
 import { deployLidoLocator } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
-
 describe("Lido.sol:finalizeUpgrade_v3", () => {
   let deployer: HardhatEthersSigner;
 

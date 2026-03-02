@@ -322,9 +322,7 @@ describe("VaultHub.sol:owner-functions", () => {
       expect(withdrawable).to.be.lessThanOrEqual(totalValue - locked);
 
       // Should succeed for withdrawable amount
-      await expect(vaultHub.connect(vaultOwner).withdraw(vaultAddress, recipient, withdrawable)).to.not.revert(
-        ethers,
-      );
+      await expect(vaultHub.connect(vaultOwner).withdraw(vaultAddress, recipient, withdrawable)).to.not.revert(ethers);
 
       // Should fail for more than withdrawable
       if (withdrawable > 0) {
