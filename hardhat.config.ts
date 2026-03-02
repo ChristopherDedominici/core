@@ -14,6 +14,15 @@ export default defineConfig({
     outDir: "typechain-types",
   },
   test: {
+    solidity: {
+      // Low runs/depth to keep local dev fast; some invariant tests
+      // (e.g. minFirstAllocationStrategy, beaconChainDepositor) OOM at higher values.
+      invariant: {
+        runs: 4,
+        depth: 4,
+        failOnRevert: true,
+      },
+    },
     mocha: {
       rootHooks: mochaRootHooks,
     },
