@@ -79,12 +79,10 @@ contract DoubleRefSlotCacheTest is Test {
     /**
      * invariant 1. the current value should be equal to the value for the next refSlot
      *
-     * Foundry inline config (ignored by HH3, kept for reference):
+     * https://book.getfoundry.sh/reference/config/inline-test-config#in-line-invariant-configs
      * forge-config: default.invariant.runs = 32
      * forge-config: default.invariant.depth = 32
      * forge-config: default.invariant.fail-on-revert = false
-     * HH3 uses global invariant config in hardhat.config.ts instead.
-     * `fail-on-revert = false` is handled by the try/catch in increaseIntValue().
      */
     function invariant_currentValue() external {
         assertEq(example.getIntCurrentValue(), example.getIntValueForRefSlot(example.refSlot() + 1));
@@ -93,12 +91,10 @@ contract DoubleRefSlotCacheTest is Test {
     /**
      * invariant 2. the value on refSlot should be equal to the previous value
      *
-     * Foundry inline config (ignored by HH3, kept for reference):
+     * https://book.getfoundry.sh/reference/config/inline-test-config#in-line-invariant-configs
      * forge-config: default.invariant.runs = 128
      * forge-config: default.invariant.depth = 128
      * forge-config: default.invariant.fail-on-revert = false
-     * HH3 uses global invariant config in hardhat.config.ts instead.
-     * `fail-on-revert = false` is handled by the try/catch in increaseIntValue().
      */
     function invariant_valueOnRefSlot() external {
         DoubleRefSlotCache.Int104WithCache[DOUBLE_CACHE_LENGTH] memory cache = example.getIntCacheStorage();
