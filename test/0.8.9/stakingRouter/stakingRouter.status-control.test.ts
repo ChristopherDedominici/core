@@ -95,7 +95,7 @@ context("StakingRouter.sol:status-control", () => {
     it("Not emit event when new status is the same", async () => {
       await stakingRouter.setStakingModuleStatus(moduleId, Status.DepositsPaused);
 
-      await expect(stakingRouter.testing_setStakingModuleStatus(moduleId, Status.DepositsPaused)).to.not.emit(
+      await expect(stakingRouter.harness_setStakingModuleStatus(moduleId, Status.DepositsPaused)).to.not.emit(
         stakingRouter,
         "StakingModuleStatusSet",
       );

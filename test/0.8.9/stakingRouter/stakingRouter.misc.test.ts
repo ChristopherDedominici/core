@@ -129,7 +129,7 @@ describe("StakingRouter.sol:misc", () => {
     context("simulate upgrade from v2", () => {
       beforeEach(async () => {
         // reset contract version
-        await stakingRouter.testing_setBaseVersion(2);
+        await stakingRouter.harness_setBaseVersion(2);
       });
 
       it("sets correct contract version", async () => {
