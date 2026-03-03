@@ -1,13 +1,12 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { ether } from "lib";
-import { getProtocolContext, ProtocolContext, report } from "lib/protocol";
+import { ethers, networkHelpers } from "lib/hardhat.js";
+import { ether } from "lib/index.js";
+import { getProtocolContext, type ProtocolContext, report } from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Negative rebase", () => {
   let ctx: ProtocolContext;
@@ -22,7 +21,7 @@ describe("Integration: Negative rebase", () => {
     snapshot = await Snapshot.take();
 
     [ethHolder] = await ethers.getSigners();
-    await setBalance(ethHolder.address, ether("1000000"));
+    await networkHelpers.setBalance(ethHolder.address, ether("1000000"));
     const network = await ethers.provider.getNetwork();
 
     // In case of sepolia network, transfer some BEPOLIA tokens to the adapter contract

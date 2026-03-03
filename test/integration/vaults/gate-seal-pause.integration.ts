@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Dashboard, PredepositGuarantee, StakingVault, VaultHub } from "typechain-types";
+import type { Dashboard, PredepositGuarantee, StakingVault, VaultHub } from "typechain-types/index.js";
+
+import { ethers } from "lib/hardhat.js";
 
 // TS interface aligned with contracts/common/interfaces/IGateSeal.sol
 interface IGateSeal {
@@ -20,17 +21,17 @@ const IGateSeal_ABI = [
   "function get_sealing_committee() external view returns (address)",
 ];
 
-import { ether, generateValidator } from "lib";
+import { ether, generateValidator } from "lib/index.js";
 import {
   createVaultWithDashboard,
   ensurePredepositGuaranteeUnpaused,
   generatePredepositData,
   getProtocolContext,
-  ProtocolContext,
+  type ProtocolContext,
   setupLidoForVaults,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: GateSeal pause functionality for VaultHub and PredepositGuarantee", () => {
   let ctx: ProtocolContext;
@@ -78,7 +79,7 @@ describe("Integration: GateSeal pause functionality for VaultHub and PredepositG
 
     // Get the gateSeal from the state file
     // Note: In actual deployment, this would be the gateSealForVaults created during V3 upgrade
-    const state = await import("lib/state-file").then((m) => m.readNetworkState());
+    const state = await import("lib/state-file.js").then((m) => m.readNetworkState());
     const gateSealAddress = state.gateSealV3?.address;
 
     if (!gateSealAddress) {
@@ -262,7 +263,7 @@ describe("Integration: GateSeal pause functionality for VaultHub and PredepositG
     // Attempt to seal with unauthorized address should fail
     // Note: The actual error will depend on the GateSeal implementation
     // This test verifies that access control is working
-    await expect(gateSeal.connect(stranger).seal([await vaultHub.getAddress()])).to.be.reverted;
+    await expect(gateSeal.connect(stranger).seal([await vaultHub.getAddress()])).to.revert(ethers);
   });
 
   it("Cannot seal when VaultHub is already paused", async function () {
@@ -277,7 +278,7 @@ describe("Integration: GateSeal pause functionality for VaultHub and PredepositG
 
     // Attempt to seal already paused contract should revert
     // Note: The GateSeal is a Vyper contract that may not properly bubble up custom errors
-    await expect(gateSeal.connect(sealingCommittee).seal([await vaultHub.getAddress()])).to.be.reverted;
+    await expect(gateSeal.connect(sealingCommittee).seal([await vaultHub.getAddress()])).to.revert(ethers);
   });
 
   it("Cannot seal when PredepositGuarantee is already paused", async function () {
@@ -293,6 +294,6 @@ describe("Integration: GateSeal pause functionality for VaultHub and PredepositG
 
     // Attempt to seal already paused contract should revert
     // Note: The GateSeal is a Vyper contract that may not properly bubble up custom errors
-    await expect(gateSeal.connect(sealingCommittee).seal([await predepositGuarantee.getAddress()])).to.be.reverted;
+    await expect(gateSeal.connect(sealingCommittee).seal([await predepositGuarantee.getAddress()])).to.revert(ethers);
   });
 });

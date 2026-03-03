@@ -1,20 +1,19 @@
-import { ethers } from "hardhat";
+import type { StakingRouter, TriggerableWithdrawalsGateway } from "typechain-types/index.js";
 
-import { StakingRouter, TriggerableWithdrawalsGateway } from "typechain-types";
-
-import { getContractPath, loadContract } from "lib/contract";
+import { getContractPath, loadContract } from "lib/contract.js";
 import {
   deployBehindOssifiableProxy,
   deployContract,
   deployImplementation,
   deployWithoutProxy,
   makeTx,
-} from "lib/deploy";
-import { log } from "lib/log";
-import { readNetworkState, Sk, updateObjectInState } from "lib/state-file";
-import { en0x } from "lib/string";
+} from "lib/deploy.js";
+import { ethers } from "lib/hardhat.js";
+import { log } from "lib/log.js";
+import { readNetworkState, Sk, updateObjectInState } from "lib/state-file.js";
+import { en0x } from "lib/string.js";
 
-import { ACTIVE_VALIDATOR_PROOF } from "test/0.8.25/validatorState";
+import { ACTIVE_VALIDATOR_PROOF } from "test/0.8.25/validatorState.js";
 
 const ZERO_LAST_PROCESSING_REF_SLOT = 0;
 

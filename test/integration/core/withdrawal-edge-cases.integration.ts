@@ -1,15 +1,14 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance, time } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Lido, WithdrawalQueueERC721 } from "typechain-types";
+import type { Lido, WithdrawalQueueERC721 } from "typechain-types/index.js";
 
-import { ether, findEventsWithInterfaces } from "lib";
-import { finalizeWQViaSubmit, getProtocolContext, ProtocolContext, report } from "lib/protocol";
+import { ethers, networkHelpers } from "lib/hardhat.js";
+import { ether, findEventsWithInterfaces } from "lib/index.js";
+import { finalizeWQViaSubmit, getProtocolContext, type ProtocolContext, report } from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Withdrawal edge cases", () => {
   let ctx: ProtocolContext;
@@ -28,7 +27,7 @@ describe("Integration: Withdrawal edge cases", () => {
     snapshot = await Snapshot.take();
 
     [, holder] = await ethers.getSigners();
-    await setBalance(holder.address, ether("1000000"));
+    await networkHelpers.setBalance(holder.address, ether("1000000"));
 
     await finalizeWQViaSubmit(ctx);
   });
@@ -131,9 +130,9 @@ describe("Integration: Withdrawal edge cases", () => {
       const requestIds = [requestId];
 
       // Skip next report by waiting extra time
-      const timeBeforeMissedReport = await time.latest();
-      await time.increase(24 * 60 * 60); // 24 hours
-      const timeAfterMissedReport = await time.latest();
+      const timeBeforeMissedReport = await networkHelpers.time.latest();
+      await networkHelpers.time.increase(24 * 60 * 60); // 24 hours
+      const timeAfterMissedReport = await networkHelpers.time.latest();
 
       // Check request not finalized after missed report
       const [status] = await wq.getWithdrawalStatus([...requestIds]);

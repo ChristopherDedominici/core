@@ -141,7 +141,7 @@ async function getForkingNetworkConfig(): Promise<ProtocolNetworkConfig> {
 
 export async function getNetworkConfig(network: string): Promise<ProtocolNetworkConfig> {
   switch (network) {
-    case "hardhat":
+    case "default":
       if (getMode() === "scratch") {
         return getLocalNetworkConfig(network, "scratch");
       }
