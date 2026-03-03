@@ -108,6 +108,6 @@ export async function applyMigrationScript(migrationFile: string): Promise<void>
     log.scriptFinish(migrationFile);
   } catch (error) {
     log.error("Migration failed:", error as Error);
-    process.exit(1);
+    throw error;
   }
 }

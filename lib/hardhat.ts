@@ -7,11 +7,7 @@
  *
  * This module establishes a single shared connection using top-level await
  * (supported because package.json has "type": "module") and re-exports
- * `ethers` and `networkHelpers` for use across the codebase.
- *
- * Usage:
- *   import { ethers } from "lib/hardhat";
- *   import { ethers, networkHelpers } from "lib/hardhat";
+ * `ethers`, `networkHelpers`, etc. for use across the codebase.
  */
 import hre from "hardhat";
 

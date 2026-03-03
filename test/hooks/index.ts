@@ -1,5 +1,6 @@
 import * as Mocha from "mocha";
 
+import "./assertion/equalStETH.js";
 import "./assertion/revertedWithOZAccessControlError";
 
 // Increase number of stack frames shown in error messages

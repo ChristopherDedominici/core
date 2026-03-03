@@ -24,6 +24,9 @@ export default defineConfig({
       },
     },
     mocha: {
+      parallel: true,
+      // Each worker spawns a full EDR instance + deploys the protocol; >2 is heavy on memory
+      jobs: 2,
       rootHooks: mochaRootHooks,
     },
   },
