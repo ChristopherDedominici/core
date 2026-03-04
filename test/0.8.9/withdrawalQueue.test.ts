@@ -115,7 +115,7 @@ describe("WithdrawalQueue.sol", () => {
 
   context("constructor", () => {
     it("Reverts if wstETH address is zero", async () => {
-      await expect(ethers.deployContract("WithdrawalsQueue__Harness", [ZeroAddress])).to.be.revertedWithoutReason();
+      await expect(ethers.deployContract("WithdrawalsQueue__Harness", [ZeroAddress])).to.be.revertedWithoutReason(ethers);
     });
 
     it("Sets initial properties", async () => {

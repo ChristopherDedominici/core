@@ -1,6 +1,5 @@
-import { ethers } from "hardhat";
-
-import { log } from "lib/log";
+import { ethers } from "lib/hardhat.js";
+import { log } from "lib/log.js";
 
 async function main() {
   log.scriptStart(__filename);

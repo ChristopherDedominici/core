@@ -1,17 +1,19 @@
-import { TransactionReceipt, TransactionResponse } from "ethers";
+import { type TransactionReceipt, type TransactionResponse } from "ethers";
 import fs from "fs";
 
 import * as toml from "@iarna/toml";
 
-import { IDualGovernance, IEmergencyProtectedTimelock } from "typechain-types";
+import type { IDualGovernance, IEmergencyProtectedTimelock } from "typechain-types/index.js";
 
-import { advanceChainTime, ether, log } from "lib";
-import { impersonate } from "lib/account";
-import { UpgradeParameters, validateUpgradeParameters } from "lib/config-schemas";
-import { loadContract } from "lib/contract";
-import { DeploymentState, getAddress, Sk } from "lib/state-file";
+import { impersonate } from "lib/account.js";
+import { type UpgradeParameters, validateUpgradeParameters } from "lib/config-schemas.js";
+import { loadContract } from "lib/contract.js";
+import { log } from "lib/log.js";
+import { type DeploymentState, getAddress, Sk } from "lib/state-file.js";
+import { advanceChainTime } from "lib/time.js";
+import { ether } from "lib/units.js";
 
-import { ONE_HOUR } from "test/suite";
+import { ONE_HOUR } from "test/suite/index.js";
 
 const FUSAKA_TX_LIMIT = 2n ** 24n; // 16M =  16_777_216
 

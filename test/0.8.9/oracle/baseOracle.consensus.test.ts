@@ -65,7 +65,7 @@ describe("BaseOracle.sol:consensus", () => {
       });
 
       it("on invalid contract", async () => {
-        await expect(baseOracle.setConsensusContract(member.address)).to.be.revertedWithoutReason();
+        await expect(baseOracle.setConsensusContract(member.address)).to.be.revertedWithoutReason(ethers);
       });
 
       it("on mismatched config", async () => {

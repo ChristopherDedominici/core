@@ -1252,7 +1252,7 @@ describe("Dashboard.sol", () => {
 
     it("does not allow fallback behavior", async () => {
       const tx = vaultOwner.sendTransaction({ to: dashboard, data: "0x111111111111", value: amount });
-      await expect(tx).to.be.revertedWithoutReason();
+      await expect(tx).to.be.revertedWithoutReason(ethers);
     });
 
     it("receive funds the vault", async () => {
