@@ -276,7 +276,7 @@ function _getStateFileFileName(networkStateFile = "") {
 }
 
 function _getFileName(dir: string, networkName: string, prefix: string = NETWORK_STATE_FILE_PREFIX) {
-  return resolve(dir, `${prefix}${networkName}-${process.pid}.json`);
+  return resolve(dir, `${prefix}${networkName}.json`);
 }
 
 function _readStateFile(fileName: string) {
