@@ -1,5 +1,7 @@
 import * as process from "node:process";
 
+import { log } from "lib/log.js";
+
 import { getMode } from "../../hardhat.helpers.js";
 import { networkConfig } from "../hardhat.js";
 import { readNetworkState, Sk } from "../state-file.js";
@@ -19,7 +21,16 @@ export function isNonForkingHardhatNetwork() {
   return false;
 }
 
-
+export async function parseDeploymentJson(name: string) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - file is missing out of the box, that's why we need to catch the error
+    return await import(`../../deployed-${name}.json`);
+  } catch (e) {
+    log.error(e as Error);
+    throw new Error("Failed to parse deployed-local.json. Did you run scratch deploy?");
+  }
+}
 
 export class ProtocolNetworkConfig {
   constructor(
@@ -76,7 +87,7 @@ const getDefaults = (obj: ProtocolNetworkItems) =>
   Object.fromEntries(Object.entries(obj).map(([key]) => [key, ""])) as ProtocolNetworkItems;
 
 async function getLocalNetworkConfig(network: string, source: "fork" | "scratch"): Promise<ProtocolNetworkConfig> {
-  const config = readNetworkState();
+  const config = await parseDeploymentJson(network);
   const defaults: Record<keyof ProtocolNetworkItems, string> = {
     ...getDefaults(defaultEnv),
     locator: config[Sk.lidoLocator].proxy.address,
