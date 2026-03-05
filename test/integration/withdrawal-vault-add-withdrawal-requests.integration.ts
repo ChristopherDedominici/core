@@ -79,21 +79,17 @@ describe("Integration: WithdrawalVault: addWithdrawalRequests", () => {
       .and.to.emit(withdrawalVault, "WithdrawalRequestAdded")
       .withArgs(encodeEIP7002Payload(PUBKEYS[1], AMOUNTS[1]));
 
-    // In HH3/EDR, the system may auto-dequeue EIP-7002 requests at block boundaries,
-    // so the queue may already be empty. The emit assertions above already verify correctness.
     const requests = await readWithdrawalRequests();
-    if (requests.length > 0) {
-      expect(requests.length).to.equal(PUBKEYS.length);
+    expect(requests.length).to.equal(PUBKEYS.length);
 
-      expect(requests[0].address.toLocaleLowerCase()).to.equal(withdrawalVaultAddress.toLocaleLowerCase());
-      expect(requests[0].pubkey).to.equal(PUBKEYS[0]);
-      expect(requests[0].amount).to.equal(AMOUNTS[0]);
+    expect(requests[0].address.toLocaleLowerCase()).to.equal(withdrawalVaultAddress.toLocaleLowerCase());
+    expect(requests[0].pubkey).to.equal(PUBKEYS[0]);
+    expect(requests[0].amount).to.equal(AMOUNTS[0]);
 
-      expect(requests[1].address.toLocaleLowerCase()).to.equal(withdrawalVaultAddress.toLocaleLowerCase());
-      expect(requests[1].pubkey).to.equal(PUBKEYS[1]);
-      expect(requests[1].amount).to.equal(AMOUNTS[1]);
+    expect(requests[1].address.toLocaleLowerCase()).to.equal(withdrawalVaultAddress.toLocaleLowerCase());
+    expect(requests[1].pubkey).to.equal(PUBKEYS[1]);
+    expect(requests[1].amount).to.equal(AMOUNTS[1]);
 
-      expect((await readWithdrawalRequests()).length).to.equal(0);
-    }
+    expect((await readWithdrawalRequests()).length).to.equal(0);
   });
 });

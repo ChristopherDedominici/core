@@ -4,8 +4,7 @@ import { type ExclusiveSuiteFunction, type PendingSuiteFunction } from "mocha";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import type { ERC721 } from "typechain-types/@openzeppelin/contracts/token/ERC721/ERC721.js";
-import type { ERC721Receiver__Mock } from "typechain-types/index.js";
+import type { ERC721, ERC721Receiver__Mock } from "typechain-types/index.js";
 
 import {
   ERC165_INTERFACE_ID,
