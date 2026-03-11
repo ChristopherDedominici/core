@@ -19,11 +19,11 @@ contract StakingRouter__Harness is StakingRouter {
         return _getStakingModuleByIndex(_stakingModuleIndex);
     }
 
-    function testing_setBaseVersion(uint256 version) external {
+    function harness_setBaseVersion(uint256 version) external {
         CONTRACT_VERSION_POSITION.setStorageUint256(version);
     }
 
-    function testing_setStakingModuleStatus(uint256 _stakingModuleId, StakingModuleStatus _status) external {
+    function harness_setStakingModuleStatus(uint256 _stakingModuleId, StakingModuleStatus _status) external {
         StakingModule storage stakingModule = _getStakingModuleByIndex(_getStakingModuleIndexById(_stakingModuleId));
         _setStakingModuleStatus(stakingModule, _status);
     }

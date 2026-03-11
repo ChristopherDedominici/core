@@ -18,12 +18,20 @@ contract DoubleRefSlotCacheExample {
     function increaseIntValue(
         int104 increment
     ) external returns (DoubleRefSlotCache.Int104WithCache[DOUBLE_CACHE_LENGTH] memory) {
-        DoubleRefSlotCache.Int104WithCache[DOUBLE_CACHE_LENGTH] memory newStorage = intCacheStorage.withValueIncrease(
-            IHashConsensus(address(this)),
-            increment
-        );
-        intCacheStorage = newStorage;
-        return newStorage;
+        try this._doIncreaseIntValue(increment) returns (
+            DoubleRefSlotCache.Int104WithCache[DOUBLE_CACHE_LENGTH] memory newStorage
+        ) {
+            intCacheStorage = newStorage;
+            return newStorage;
+        } catch {
+            return intCacheStorage;
+        }
+    }
+
+    function _doIncreaseIntValue(
+        int104 increment
+    ) external returns (DoubleRefSlotCache.Int104WithCache[DOUBLE_CACHE_LENGTH] memory) {
+        return intCacheStorage.withValueIncrease(IHashConsensus(address(this)), increment);
     }
 
     function increaseRefSlot() external {

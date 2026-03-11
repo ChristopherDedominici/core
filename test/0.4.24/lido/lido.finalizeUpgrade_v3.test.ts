@@ -1,23 +1,27 @@
 import { expect } from "chai";
 import { MaxUint256, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import {
-  Burner,
-  Burner__MockForMigration,
+  type Burner,
+  type Burner__MockForMigration,
   ICSModule__factory,
-  Lido__HarnessForFinalizeUpgradeV3,
-  LidoLocator,
+  type Lido__HarnessForFinalizeUpgradeV3,
+  type LidoLocator,
   OssifiableProxy__factory,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { certainAddress, ether, getStorageAtPosition, impersonate, proxify, TOTAL_BASIS_POINTS } from "lib";
+import { impersonate } from "lib/account.js";
+import { certainAddress } from "lib/address.js";
+import { TOTAL_BASIS_POINTS } from "lib/constants.js";
+import { ethers, networkHelpers } from "lib/hardhat.js";
+import { proxify } from "lib/proxy.js";
+import { getStorageAtPosition } from "lib/storage.js";
+import { ether } from "lib/units.js";
 
-import { deployLidoLocator } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployLidoLocator } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Lido.sol:finalizeUpgrade_v3", () => {
   let deployer: HardhatEthersSigner;
@@ -93,7 +97,7 @@ describe("Lido.sol:finalizeUpgrade_v3", () => {
 
   context("initialized", () => {
     before(async () => {
-      const latestBlock = BigInt(await time.latestBlock());
+      const latestBlock = BigInt(await networkHelpers.time.latestBlock());
 
       await lido.connect(deployer).harness_initialize_v2(locator, { value: initialValue });
 
@@ -161,7 +165,7 @@ describe("Lido.sol:finalizeUpgrade_v3", () => {
           [nodeOperatorsRegistryAddress, simpleDvtAddress, csmAccountingAddress, withdrawalQueueAddress],
           0,
         ),
-      ).to.not.be.reverted;
+      ).to.not.revert(ethers);
 
       expect(await lido.getLidoLocator()).to.equal(locator);
       expect(await lido.getTotalShares()).to.equal(totalShares);

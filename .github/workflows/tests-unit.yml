@@ -16,8 +16,8 @@ jobs:
       - name: Run unit tests
         run: yarn test
 
-  test_foundry_fuzzing:
-    name: Foundry / Fuzzing & Invariants
+  test_solidity_fuzzing:
+    name: Solidity / Fuzzing & Invariants
     runs-on: ubuntu-latest
 
     steps:
@@ -26,15 +26,5 @@ jobs:
       - name: Common setup
         uses: ./.github/workflows/setup
 
-      - name: Install foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        # Use a specific version of Foundry in case nightly is broken
-        # https://github.com/foundry-rs/foundry/releases
-        # with:
-        #   version: nightly-54d8510c0f2b0f791f4c5ef99866c6af99b7606a
-
-      - name: Print forge version
-        run: forge --version
-
       - name: Run fuzzing and invariant tests
-        run: forge test -vvv
+        run: yarn hardhat test solidity -vvvvv

@@ -1,12 +1,12 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
 
-import { SecondOpinionOracle__Mock } from "typechain-types";
+import type { SecondOpinionOracle__Mock } from "typechain-types/index.js";
 
-import { ether, impersonate, log, ONE_GWEI } from "lib";
-import { getProtocolContext, ProtocolContext, report } from "lib/protocol";
+import { ethers } from "lib/hardhat.js";
+import { ether, impersonate, log, ONE_GWEI } from "lib/index.js";
+import { getProtocolContext, type ProtocolContext, report } from "lib/protocol/index.js";
 
-import { bailOnFailure, Snapshot } from "test/suite";
+import { bailOnFailure, Snapshot } from "test/suite/index.js";
 
 const AMOUNT = ether("100");
 const MAX_DEPOSIT = 150n;

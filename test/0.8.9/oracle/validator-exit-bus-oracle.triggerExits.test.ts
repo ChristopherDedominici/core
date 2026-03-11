@@ -1,17 +1,18 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   HashConsensus__Harness,
   TriggerableWithdrawalsGateway__MockForVEB,
   ValidatorsExitBus__Harness,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { de0x, numberToHex, VEBO_CONSENSUS_VERSION } from "lib";
+import { VEBO_CONSENSUS_VERSION } from "lib/constants.js";
+import { ethers } from "lib/hardhat.js";
+import { de0x, numberToHex } from "lib/string.js";
 
-import { DATA_FORMAT_LIST, deployVEBO, initVEBO, SECONDS_PER_FRAME } from "test/deploy";
+import { DATA_FORMAT_LIST, deployVEBO, initVEBO, SECONDS_PER_FRAME } from "test/deploy/index.js";
 
 // -----------------------------------------------------------------------------
 // Constants & helpers
