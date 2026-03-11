@@ -17,10 +17,6 @@ typechain-types/
 cache/
 artifacts/
 
-# foundry artifacts
-foundry/cache/
-foundry/out/
-
 # Extracted ABI files
 lib/abi/*.json
 
@@ -28,7 +24,7 @@ lib/abi/*.json
 accounts.json
 deployed-local.json
 deployed-local-devnet.json
-deployed-hardhat.json
+deployed-default.json
 deployed-local-devnet.json
 deployed-mainnet-upgrade.json
 
