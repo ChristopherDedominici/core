@@ -2,14 +2,37 @@ import "dotenv/config";
 import { configVariable, defineConfig } from "hardhat/config";
 
 import HardhatToolbox from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
+import HardhatContractSizer from "@solidstate/hardhat-contract-sizer";
 
 import { getHardhatForkingConfig, loadAccounts } from "./hardhat.helpers.js";
+import {
+  checkInterfacesTask,
+  compileOverrideTask,
+  extractAbisTask,
+  lintSolidityTask,
+  validateConfigsTask,
+  verifyDeployedTask,
+} from "./tasks/index.js";
 import { mochaRootHooks } from "./test/hooks/index.js";
 
 export const ZERO_PK = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 export default defineConfig({
-  plugins: [HardhatToolbox],
+  plugins: [HardhatToolbox, HardhatContractSizer],
+  tasks: [
+    checkInterfacesTask,
+    compileOverrideTask,
+    extractAbisTask,
+    lintSolidityTask,
+    validateConfigsTask,
+    verifyDeployedTask,
+  ],
+  contractSizer: {
+    alphaSort: false,
+    runOnCompile: process.env.SKIP_CONTRACT_SIZE ? false : true,
+    strict: false,
+    except: [/template/, /mocks/, /@aragon/, /openzeppelin/, /test/],
+  },
   typechain: {
     outDir: "typechain-types",
   },
@@ -40,6 +63,7 @@ export default defineConfig({
     npmFilesToBuild: [
       "@aragon/apps-agent/contracts/Agent.sol",
       "@aragon/apps-finance/contracts/Finance.sol",
+      "@aragon/apps-vault/contracts/Vault.sol",
       "@aragon/apps-lido/apps/token-manager/contracts/TokenManager.sol",
       "@aragon/apps-lido/apps/voting/contracts/Voting.sol",
       "@aragon/id/contracts/FIFSResolvingRegistrar.sol",

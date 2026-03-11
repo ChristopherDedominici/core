@@ -16,5 +16,6 @@
     }
   },
   "include": ["./test", "./typechain-types", "./lib", "./scripts", "./tasks", "./deployed-*.json"],
+  "exclude": ["./scripts/archive"],
   "files": ["./hardhat.config.ts", "./commitlint.config.ts", "./globals.d.ts"]
 }
