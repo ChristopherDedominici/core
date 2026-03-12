@@ -1,9 +1,8 @@
-import { ethers } from "hardhat";
-
-import { loadContract } from "lib/contract";
-import { makeTx } from "lib/deploy";
-import { streccak } from "lib/keccak";
-import { readNetworkState, Sk } from "lib/state-file";
+import { loadContract } from "lib/contract.js";
+import { makeTx } from "lib/deploy.js";
+import { ethers } from "lib/hardhat.js";
+import { streccak } from "lib/keccak.js";
+import { readNetworkState, Sk } from "lib/state-file.js";
 
 const STAKING_MODULE_MANAGE_ROLE = streccak("STAKING_MODULE_MANAGE_ROLE");
 
