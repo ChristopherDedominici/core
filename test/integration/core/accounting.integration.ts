@@ -1,15 +1,19 @@
 import { expect } from "chai";
-import { ContractTransactionReceipt, LogDescription, TransactionResponse, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import { ContractTransactionReceipt, type LogDescription, TransactionResponse, ZeroAddress } from "ethers";
 
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import { LIMITER_PRECISION_BASE } from "lib/constants.js";
+import { ethers, networkHelpers } from "lib/hardhat.js";
+import { ether, impersonate, ONE_GWEI, updateBalance } from "lib/index.js";
+import {
+  getProtocolContext,
+  getReportTimeElapsed,
+  type ProtocolContext,
+  removeStakingLimit,
+  report,
+} from "lib/protocol/index.js";
 
-import { ether, impersonate, ONE_GWEI, updateBalance } from "lib";
-import { LIMITER_PRECISION_BASE } from "lib/constants";
-import { getProtocolContext, getReportTimeElapsed, ProtocolContext, removeStakingLimit, report } from "lib/protocol";
-
-import { Snapshot } from "test/suite";
-import { MAX_BASIS_POINTS, ONE_DAY, SHARE_RATE_PRECISION } from "test/suite/constants";
+import { MAX_BASIS_POINTS, ONE_DAY, SHARE_RATE_PRECISION } from "test/suite/constants.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Accounting", () => {
   let ctx: ProtocolContext;
@@ -628,8 +632,8 @@ describe("Integration: Accounting", () => {
     const excess = limit / 2n; // 2nd report will take two halves of the excess of the limit size
     const limitWithExcess = limit + excess;
 
-    await setBalance(withdrawalVault.address, limitWithExcess);
-    await setBalance(elRewardsVault.address, limitWithExcess);
+    await networkHelpers.setBalance(withdrawalVault.address, limitWithExcess);
+    await networkHelpers.setBalance(elRewardsVault.address, limitWithExcess);
 
     const beforeState = await readState();
 

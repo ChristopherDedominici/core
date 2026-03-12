@@ -1,11 +1,9 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   Accounting__MockForSanityChecker,
   AccountingOracle__MockForSanityChecker,
   Burner__MockForSanityChecker,
@@ -13,12 +11,16 @@ import {
   OracleReportSanityChecker,
   StakingRouter__MockForSanityChecker,
   WithdrawalQueue__MockForSanityChecker,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { ether, getCurrentBlockTimestamp, impersonate, randomAddress } from "lib";
-import { TOTAL_BASIS_POINTS } from "lib/constants";
+import { impersonate } from "lib/account.js";
+import { randomAddress } from "lib/address.js";
+import { TOTAL_BASIS_POINTS } from "lib/constants.js";
+import { ethers, networkHelpers } from "lib/hardhat.js";
+import { getCurrentBlockTimestamp } from "lib/time.js";
+import { ether } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 const MAX_UINT16 = BigInt(2 ** 16);
 const MAX_UINT32 = BigInt(2 ** 32);
@@ -75,7 +77,7 @@ describe("OracleReportSanityChecker.sol", () => {
   before(async () => {
     [deployer, admin, elRewardsVault, stranger, manager, withdrawalVault] = await ethers.getSigners();
 
-    await setBalance(withdrawalVault.address, ether("500"));
+    await networkHelpers.setBalance(withdrawalVault.address, ether("500"));
 
     withdrawalQueue = await ethers.deployContract("WithdrawalQueue__MockForSanityChecker");
     burner = await ethers.deployContract("Burner__MockForSanityChecker");
@@ -1268,7 +1270,7 @@ describe("OracleReportSanityChecker.sol", () => {
     });
 
     it("passes all checks with correct oracle report data", async () => {
-      await expect(checker.connect(accountingSigher).checkAccountingOracleReport(...report())).not.to.be.reverted;
+      await expect(checker.connect(accountingSigher).checkAccountingOracleReport(...report())).not.to.revert(ethers);
     });
 
     it("handles zero time passed for annual balance increase", async () => {
@@ -1279,7 +1281,7 @@ describe("OracleReportSanityChecker.sol", () => {
             timeElapsed: 0n,
           }),
         ),
-      ).not.to.be.reverted;
+      ).not.to.revert(ethers);
     });
 
     it("handles zero pre CL balance estimating balance increase", async () => {
@@ -1290,7 +1292,7 @@ describe("OracleReportSanityChecker.sol", () => {
             postCLBalance: 1000n,
           }),
         ),
-      ).not.to.be.reverted;
+      ).not.to.revert(ethers);
     });
 
     it("handles appeared validators", async () => {
@@ -1301,7 +1303,7 @@ describe("OracleReportSanityChecker.sol", () => {
             postCLValidators: correctOracleReport.preCLValidators + 2n,
           }),
         ),
-      ).not.to.be.reverted;
+      ).not.to.revert(ethers);
     });
 
     it("handles zero time passed for appeared validators", async () => {
@@ -1313,7 +1315,7 @@ describe("OracleReportSanityChecker.sol", () => {
             timeElapsed: 0n,
           }),
         ),
-      ).not.to.be.reverted;
+      ).not.to.revert(ethers);
     });
   });
 
@@ -1331,7 +1333,7 @@ describe("OracleReportSanityChecker.sol", () => {
     });
 
     it("works with correct validators count", async () => {
-      await expect(checker.checkExitBusOracleReport(maxExitRequests)).not.to.be.reverted;
+      await expect(checker.checkExitBusOracleReport(maxExitRequests)).not.to.revert(ethers);
     });
   });
 
@@ -1349,7 +1351,7 @@ describe("OracleReportSanityChecker.sol", () => {
     });
 
     it("works with correct exited validators count", async () => {
-      await expect(checker.checkExitedValidatorsRatePerDay(maxExitedValidators)).not.to.be.reverted;
+      await expect(checker.checkExitedValidatorsRatePerDay(maxExitedValidators)).not.to.revert(ethers);
     });
   });
 
@@ -1367,7 +1369,7 @@ describe("OracleReportSanityChecker.sol", () => {
     });
 
     it("works with correct count", async () => {
-      await expect(checker.checkNodeOperatorsPerExtraDataItemCount(12, maxCount)).not.to.be.reverted;
+      await expect(checker.checkNodeOperatorsPerExtraDataItemCount(12, maxCount)).not.to.revert(ethers);
     });
   });
 
@@ -1385,7 +1387,7 @@ describe("OracleReportSanityChecker.sol", () => {
     });
 
     it("works with correct count", async () => {
-      await expect(checker.checkExtraDataItemsCountPerTransaction(maxCount)).not.to.be.reverted;
+      await expect(checker.checkExtraDataItemsCountPerTransaction(maxCount)).not.to.revert(ethers);
     });
   });
 

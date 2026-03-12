@@ -1,14 +1,18 @@
 import { expect } from "chai";
 import { hexlify, randomBytes, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { DepositContract__MockForBeaconChainDepositor, StakingRouter__Harness } from "typechain-types";
+import type { DepositContract__MockForBeaconChainDepositor, StakingRouter__Harness } from "typechain-types/index.js";
 
-import { certainAddress, ether, MAX_UINT256, proxify, randomString } from "lib";
+import { certainAddress } from "lib/address.js";
+import { MAX_UINT256 } from "lib/constants.js";
+import { ethers } from "lib/hardhat.js";
+import { proxify } from "lib/proxy.js";
+import { randomString } from "lib/string.js";
+import { ether } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("StakingRouter.sol:misc", () => {
   let deployer: HardhatEthersSigner;
@@ -32,7 +36,8 @@ describe("StakingRouter.sol:misc", () => {
     const allocLib = await ethers.deployContract("MinFirstAllocationStrategy", deployer);
     const stakingRouterFactory = await ethers.getContractFactory("StakingRouter__Harness", {
       libraries: {
-        ["contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
+        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]:
+          await allocLib.getAddress(),
       },
     });
 
@@ -124,7 +129,7 @@ describe("StakingRouter.sol:misc", () => {
     context("simulate upgrade from v2", () => {
       beforeEach(async () => {
         // reset contract version
-        await stakingRouter.testing_setBaseVersion(2);
+        await stakingRouter.harness_setBaseVersion(2);
       });
 
       it("sets correct contract version", async () => {

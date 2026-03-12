@@ -1,14 +1,13 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { advanceChainTime, ether, impersonate, LIMITER_PRECISION_BASE } from "lib";
+import { ethers, networkHelpers } from "lib/hardhat.js";
+import { advanceChainTime, ether, impersonate, LIMITER_PRECISION_BASE } from "lib/index.js";
 import {
   getProtocolContext,
-  ProtocolContext,
+  type ProtocolContext,
   queueBadDebtInternalization,
   removeStakingLimit,
   report,
@@ -16,10 +15,10 @@ import {
   setupVaultWithBadDebt,
   upDefaultTierShareLimit,
   waitNextAvailableReportTime,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
-import { SHARE_RATE_PRECISION } from "test/suite/constants";
+import { SHARE_RATE_PRECISION } from "test/suite/constants.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Sanity checker with bad debt internalization", () => {
   let ctx: ProtocolContext;
@@ -78,7 +77,7 @@ describe("Integration: Sanity checker with bad debt internalization", () => {
 
     await setupLidoForVaults(ctx);
     await upDefaultTierShareLimit(ctx, ether("1000"));
-    await setBalance(await withdrawalVault.getAddress(), 0n);
+    await networkHelpers.setBalance(await withdrawalVault.getAddress(), 0n);
   });
 
   beforeEach(async () => (snapshot = await Snapshot.take()));
@@ -137,7 +136,7 @@ describe("Integration: Sanity checker with bad debt internalization", () => {
 
         // Add large EL rewards (will be limited by smoothing)
         const largeRewards = ether("10000");
-        await setBalance(await elRewardsVault.getAddress(), largeRewards);
+        await networkHelpers.setBalance(await elRewardsVault.getAddress(), largeRewards);
 
         const { reportTx } = await report(ctx, {
           clDiff: 0n,
@@ -202,7 +201,7 @@ describe("Integration: Sanity checker with bad debt internalization", () => {
         // Ensure whale has enough stETH
         const whaleBalance = (await lido.getPooledEthByShares(sharesToRequest)) + ether("100");
         await removeStakingLimit(ctx);
-        await setBalance(stranger.address, whaleBalance + ether("1"));
+        await networkHelpers.setBalance(stranger.address, whaleBalance + ether("1"));
         await lido.connect(stranger).submit(ZeroAddress, { value: whaleBalance });
 
         // Request burn of large amount of shares
