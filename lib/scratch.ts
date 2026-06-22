@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { ethers } from "./hardhat.js";
+import hre from "hardhat";
+
 import { log } from "./log.js";
 
 class StepsFileNotFoundError extends Error {
@@ -31,6 +32,8 @@ async function applySteps(steps: string[]) {
   if (steps.every((step) => deployedSteps.includes(step))) {
     return; // All steps have been deployed
   }
+
+  const { ethers } = await hre.network.getOrCreate();
 
   for (const step of steps) {
     const migrationFile = resolveMigrationFile(step);

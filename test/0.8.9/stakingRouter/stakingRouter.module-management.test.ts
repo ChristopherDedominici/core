@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import { hexlify, randomBytes, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { StakingRouter } from "typechain-types/index.js";
 
 import { certainAddress } from "lib/address.js";
-import { ethers } from "lib/hardhat.js";
 import { proxify } from "lib/proxy.js";
 import { randomString } from "lib/string.js";
 import { getNextBlock } from "lib/time.js";
@@ -14,11 +15,17 @@ import { getNextBlock } from "lib/time.js";
 const UINT64_MAX = 2n ** 64n - 1n;
 
 describe("StakingRouter.sol:module-management", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
   let user: HardhatEthersSigner;
 
   let stakingRouter: StakingRouter;
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   beforeEach(async () => {
     [deployer, admin, user] = await ethers.getSigners();

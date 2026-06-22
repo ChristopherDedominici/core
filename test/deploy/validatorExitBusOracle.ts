@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import hre from "hardhat";
 
 import type { HashConsensus__Harness, ReportProcessor__Mock, ValidatorsExitBusOracle } from "typechain-types/index.js";
 
@@ -10,7 +11,6 @@ import {
   SLOTS_PER_EPOCH,
   VEBO_CONSENSUS_VERSION,
 } from "lib/constants.js";
-import { ethers } from "lib/hardhat.js";
 
 import { deployHashConsensus } from "./hashConsensus.js";
 import { deployLidoLocator, updateLidoLocatorImplementation } from "./locator.js";
@@ -18,6 +18,7 @@ import { deployLidoLocator, updateLidoLocatorImplementation } from "./locator.js
 export const DATA_FORMAT_LIST = 1;
 
 async function deployMockAccountingOracle(secondsPerSlot = SECONDS_PER_SLOT, genesisTime = GENESIS_TIME) {
+  const { ethers } = await hre.network.getOrCreate();
   const lido = await ethers.deployContract("Accounting__MockForAccountingOracle");
   const ao = await ethers.deployContract("AccountingOracle__MockForSanityChecker", [
     await lido.getAddress(),
@@ -33,6 +34,7 @@ async function deployOracleReportSanityCheckerForExitBus(
   accounting: string,
   admin: string,
 ) {
+  const { ethers } = await hre.network.getOrCreate();
   return await ethers.getContractFactory("OracleReportSanityChecker").then((f) =>
     f.deploy(lidoLocator, accountingOracle, accounting, admin, {
       exitedValidatorsPerDayLimit: 0n,
@@ -52,6 +54,7 @@ async function deployOracleReportSanityCheckerForExitBus(
 }
 
 async function deployTWG() {
+  const { ethers } = await hre.network.getOrCreate();
   return await ethers.deployContract("TriggerableWithdrawalsGateway__MockForVEB");
 }
 
@@ -65,6 +68,7 @@ export async function deployVEBO(
     initialEpoch = INITIAL_EPOCH,
   } = {},
 ) {
+  const { ethers } = await hre.network.getOrCreate();
   const locator = await deployLidoLocator();
   const locatorAddr = await locator.getAddress();
 

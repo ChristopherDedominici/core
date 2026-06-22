@@ -1,10 +1,10 @@
 import { expect } from "chai";
+import hre from "hardhat";
 
-import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { Dashboard, OperatorGrid, StakingVault, VaultHub } from "typechain-types/index.js";
 
-import { ethers } from "lib/hardhat.js";
 import { ether, MAX_SANE_SETTLED_GROWTH } from "lib/index.js";
 import {
   createVaultWithDashboard,
@@ -19,6 +19,8 @@ import { advanceChainTime, days } from "lib/time.js";
 import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: OperatorGrid", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -31,6 +33,8 @@ describe("Integration: OperatorGrid", () => {
   let nodeOperator: HardhatEthersSigner;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     originalSnapshot = await Snapshot.take();
 

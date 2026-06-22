@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
+import hre from "hardhat";
 
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { ACL } from "typechain-types/@aragon/os/contracts/acl/ACL.js";
@@ -13,13 +15,14 @@ import {
 
 import { impersonate } from "lib/account.js";
 import { certainAddress } from "lib/address.js";
-import { ethers } from "lib/hardhat.js";
 import { batch } from "lib/promise.js";
 import { ether, ONE_ETHER } from "lib/units.js";
 
 import { deployLidoDao } from "test/deploy/index.js";
 
 describe("Lido.sol:misc", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
@@ -35,6 +38,10 @@ describe("Lido.sol:misc", () => {
 
   const elRewardsVaultBalance = ether("100.0");
   const withdrawalsVaultBalance = ether("100.0");
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   /// @notice structure of the test does not allow Snapshot usage
   beforeEach(async () => {

@@ -1,7 +1,9 @@
 import { expect } from "chai";
 import { type ContractTransactionReceipt, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
-import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import type {
   ACL,
@@ -18,7 +20,6 @@ import type {
 import { impersonate } from "lib/account.js";
 import { ONE_GWEI, TOTAL_BASIS_POINTS } from "lib/constants.js";
 import { findEvents } from "lib/event.js";
-import { ethers, networkHelpers } from "lib/hardhat.js";
 import { ceilDiv } from "lib/protocol/helpers/vaults.js";
 import { advanceChainTime, days, getCurrentBlockTimestamp } from "lib/time.js";
 import { ether } from "lib/units.js";
@@ -35,6 +36,9 @@ const RESERVATION_FEE_BP = 1_00n;
 const CONNECT_DEPOSIT = ether("1");
 
 describe("VaultHub.sol:owner-functions", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let deployer: HardhatEthersSigner;
   let vaultOwner: HardhatEthersSigner;
   let newOwner: HardhatEthersSigner;
@@ -110,6 +114,8 @@ describe("VaultHub.sol:owner-functions", () => {
   }
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     [deployer, vaultOwner, newOwner, stranger, recipient] = await ethers.getSigners();
 
     // Deploy dependencies

@@ -1,8 +1,7 @@
 import { type BaseContract, type ContractRunner } from "ethers";
+import hre from "hardhat";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
-
-import { artifacts, ethers } from "./hardhat.js";
 
 interface LoadedContractHelper {
   name: string;
@@ -27,7 +26,7 @@ export interface ContractFactoryHelper<ContractType> {
 }
 
 export async function addContractHelperFields(contract: BaseContract, name: string): Promise<LoadedContract> {
-  const artifact = await artifacts.readArtifact(name);
+  const artifact = await hre.artifacts.readArtifact(name);
   (contract as unknown as LoadedContract).name = name;
   (contract as unknown as LoadedContract).contractPath = artifact.sourceName;
   (contract as unknown as LoadedContract).address = await contract.getAddress();
@@ -39,6 +38,7 @@ export async function loadContract<ContractType extends BaseContract>(
   address: string,
   signer?: HardhatEthersSigner,
 ) {
+  const { ethers } = await hre.network.getOrCreate();
   if (!signer) {
     signer = await ethers.provider.getSigner();
   }
@@ -47,6 +47,6 @@ export async function loadContract<ContractType extends BaseContract>(
 }
 
 export async function getContractPath(contractName: string) {
-  const artifact = await artifacts.readArtifact(contractName);
+  const artifact = await hre.artifacts.readArtifact(contractName);
   return artifact.sourceName;
 }

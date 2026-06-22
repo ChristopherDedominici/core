@@ -1,10 +1,9 @@
 import { expect } from "chai";
+import hre from "hardhat";
 
-import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { Dashboard, PredepositGuarantee, StakingVault, VaultHub } from "typechain-types/index.js";
-
-import { ethers } from "lib/hardhat.js";
 
 // TS interface aligned with contracts/common/interfaces/IGateSeal.sol
 interface IGateSeal {
@@ -34,6 +33,8 @@ import {
 import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: GateSeal pause functionality for VaultHub and PredepositGuarantee", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -51,6 +52,8 @@ describe("Integration: GateSeal pause functionality for VaultHub and PredepositG
   let stranger: HardhatEthersSigner;
 
   before(async function () {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
 
     originalSnapshot = await Snapshot.take();

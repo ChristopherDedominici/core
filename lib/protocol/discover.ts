@@ -1,3 +1,5 @@
+import hre from "hardhat";
+
 import type {
   AccountingOracle,
   IStakingModule,
@@ -8,7 +10,6 @@ import type {
   WithdrawalQueueERC721,
 } from "typechain-types/index.js";
 
-import { ethers, networkName } from "../hardhat.js";
 import { log } from "../log.js";
 import { batch } from "../promise.js";
 
@@ -32,6 +33,7 @@ const guard = (address: string, env: string) => {
 };
 
 const getDiscoveryConfig = async () => {
+  const { networkName } = await hre.network.getOrCreate();
   const config = await getNetworkConfig(networkName);
   if (!config) {
     throw new Error(`Network ${networkName} is not supported`);
@@ -63,6 +65,7 @@ const getDiscoveryConfig = async () => {
  * Load contract by name and address.
  */
 const loadContract = async <Name extends ContractName>(name: Name, address: string) => {
+  const { ethers } = await hre.network.getOrCreate();
   const contract = (await ethers.getContractAt(name, address)) as unknown as LoadedContract<ContractType<Name>>;
   contract.address = address;
   return contract;

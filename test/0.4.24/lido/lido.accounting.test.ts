@@ -1,6 +1,7 @@
 import { expect } from "chai";
+import hre from "hardhat";
 
-import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { ACL } from "typechain-types/@aragon/os/contracts/acl/ACL.js";
 import {
@@ -20,13 +21,14 @@ import {
 } from "typechain-types/index.js";
 
 import { impersonate, updateBalance } from "lib/account.js";
-import { ethers } from "lib/hardhat.js";
 import { getNextBlockTimestamp } from "lib/time.js";
 import { ether } from "lib/units.js";
 
 import { deployLidoDao } from "test/deploy/index.js";
 
 describe("Lido:accounting", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
 
@@ -39,6 +41,10 @@ describe("Lido:accounting", () => {
   let burner: Burner__MockForAccounting;
   let elRewardsVault: LidoExecutionLayerRewardsVault__MockForLidoAccounting;
   let withdrawalVault: WithdrawalVault__MockForLidoAccounting;
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   beforeEach(async () => {
     [deployer, stranger] = await ethers.getSigners();

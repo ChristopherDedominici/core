@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { toChecksumAddress } from "ethereumjs-util";
 import { type ContractTransactionReceipt, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
-import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import type {
   DepositContract__MockForStakingVault,
@@ -17,7 +18,6 @@ import { certainAddress, randomAddress } from "lib/address.js";
 import { MAX_UINT256, ONE_GWEI } from "lib/constants.js";
 import { computeDepositDataRoot } from "lib/deposit.js";
 import { EIP7002_MIN_WITHDRAWAL_REQUEST_FEE } from "lib/eips/eip7002.js";
-import { ethers } from "lib/hardhat.js";
 import { streccak } from "lib/keccak.js";
 import { getPubkeys } from "lib/protocol/helpers/vaults.js";
 import { proxify } from "lib/proxy.js";
@@ -35,6 +35,8 @@ const encodeEip7002Input = (pubkey: string, amount: bigint): string => {
 };
 
 describe("StakingVault.sol", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let vaultOwner: HardhatEthersSigner;
   let operator: HardhatEthersSigner;
@@ -51,6 +53,8 @@ describe("StakingVault.sol", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, vaultOwner, operator, depositor, stranger] = await ethers.getSigners();
     depositContract = await ethers.deployContract("DepositContract__MockForStakingVault");
 

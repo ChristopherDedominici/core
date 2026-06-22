@@ -6,6 +6,7 @@ import {
   hexlify,
   type Interface,
 } from "ethers";
+import hre from "hardhat";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
@@ -24,7 +25,6 @@ import type {
 import { impersonate } from "../../account.js";
 import { TOTAL_BASIS_POINTS } from "../../constants.js";
 import { findEventsWithInterfaces } from "../../event.js";
-import { ethers } from "../../hardhat.js";
 import { log } from "../../log.js";
 import { generatePredeposit, prepareLocalMerkleTree, type Validator } from "../../pdg.js";
 import { de0x } from "../../string.js";
@@ -97,6 +97,7 @@ export async function createVaultWithDashboard(
   fee = VAULT_NODE_OPERATOR_FEE,
   confirmExpiry = DEFAULT_CONFIRM_EXPIRY,
 ): Promise<VaultWithDashboard> {
+  const { ethers } = await hre.network.getOrCreate();
   const deployTx = await stakingVaultFactory
     .connect(owner)
     .createVaultWithDashboard(owner, nodeOperator, nodeOperatorManager, fee, confirmExpiry, roleAssignments, {
@@ -155,6 +156,7 @@ export async function autofillRoles(
   dashboard: Dashboard,
   nodeOperatorManager: HardhatEthersSigner,
 ): Promise<VaultRoles> {
+  const { ethers } = await hre.network.getOrCreate();
   const roleMethodMap: VaultRoleMethods = getRoleMethods(dashboard);
 
   const roleIds = await Promise.all(Object.values(roleMethodMap));
@@ -394,6 +396,7 @@ export async function createVaultProxy(
   confirmExpiry: bigint = days(7n),
   roleAssignments: Permissions.RoleAssignmentStruct[] = [],
 ): Promise<CreateVaultResponse> {
+  const { ethers } = await hre.network.getOrCreate();
   const tx = await vaultFactory
     .connect(caller)
     .createVaultWithDashboard(
@@ -443,6 +446,7 @@ export async function createVaultProxyWithoutConnectingToVaultHub(
   confirmExpiry: bigint = days(7n),
   roleAssignments: Permissions.RoleAssignmentStruct[] = [],
 ): Promise<CreateVaultResponse> {
+  const { ethers } = await hre.network.getOrCreate();
   const tx = await vaultFactory
     .connect(caller)
     .createVaultWithDashboardWithoutConnectingToVaultHub(

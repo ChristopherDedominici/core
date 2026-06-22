@@ -1,13 +1,15 @@
+import hre from "hardhat";
+
 import { makeTx } from "lib/deploy.js";
 import { findEvents } from "lib/event.js";
-import { ethers } from "lib/hardhat.js";
 import { loadContract } from "lib/index.js";
 import { cy, log } from "lib/log.js";
 import { readNetworkState, Sk, updateObjectInState } from "lib/state-file.js";
 
 export async function main() {
+  const { ethers } = await hre.network.getOrCreate();
   const deployer = (await ethers.provider.getSigner()).address;
-  const state = readNetworkState({ deployer });
+  const state = await readNetworkState({ deployer });
 
   // Check if GateSeal address is already specified
   if (state[Sk.gateSeal].address) {
@@ -45,7 +47,7 @@ export async function main() {
   log.emptyLine();
 
   // Update the state with the new GateSeal address
-  updateObjectInState(Sk.gateSeal, {
+  await updateObjectInState(Sk.gateSeal, {
     address: gateSealAddress,
   });
 }

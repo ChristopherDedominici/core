@@ -1,16 +1,19 @@
 import { expect } from "chai";
 import { randomBytes } from "ethers";
+import hre from "hardhat";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { StakingRouter } from "typechain-types/index.js";
 
 import { randomAddress } from "lib/address.js";
 import { MAX_UINT256 } from "lib/constants.js";
-import { ethers } from "lib/hardhat.js";
 import { proxify } from "lib/proxy.js";
 
 describe("StakingRouter.sol:Versioned", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
 
@@ -20,6 +23,8 @@ describe("StakingRouter.sol:Versioned", () => {
   const petrifiedVersion = MAX_UINT256;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, admin] = await ethers.getSigners();
 
     // deploy staking router

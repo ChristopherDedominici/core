@@ -1,7 +1,9 @@
 import { expect } from "chai";
 import { MaxUint256, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
-import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import {
   type Burner,
@@ -15,7 +17,6 @@ import {
 import { impersonate } from "lib/account.js";
 import { certainAddress } from "lib/address.js";
 import { TOTAL_BASIS_POINTS } from "lib/constants.js";
-import { ethers, networkHelpers } from "lib/hardhat.js";
 import { proxify } from "lib/proxy.js";
 import { getStorageAtPosition } from "lib/storage.js";
 import { ether } from "lib/units.js";
@@ -24,6 +25,9 @@ import { deployLidoLocator } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
 describe("Lido.sol:finalizeUpgrade_v3", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let deployer: HardhatEthersSigner;
 
   let impl: Lido__HarnessForFinalizeUpgradeV3;
@@ -51,6 +55,7 @@ describe("Lido.sol:finalizeUpgrade_v3", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
     [deployer] = await ethers.getSigners();
     impl = await ethers.deployContract("Lido__HarnessForFinalizeUpgradeV3");
     [lido] = await proxify({ impl, admin: deployer });

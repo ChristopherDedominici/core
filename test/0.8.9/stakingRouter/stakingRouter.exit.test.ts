@@ -1,7 +1,9 @@
 import { expect } from "chai";
 import { hexlify, randomBytes } from "ethers";
+import hre from "hardhat";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
 import type {
   DepositContract__MockForBeaconChainDepositor,
@@ -10,7 +12,6 @@ import type {
 } from "typechain-types/index.js";
 
 import { certainAddress } from "lib/address.js";
-import { ethers } from "lib/hardhat.js";
 import { proxify } from "lib/proxy.js";
 import { randomString } from "lib/string.js";
 import { ether } from "lib/units.js";
@@ -18,6 +19,8 @@ import { ether } from "lib/units.js";
 import { Snapshot } from "test/suite/index.js";
 
 describe("StakingRouter.sol:exit", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let proxyAdmin: HardhatEthersSigner;
   let stakingRouterAdmin: HardhatEthersSigner;
@@ -42,6 +45,8 @@ describe("StakingRouter.sol:exit", () => {
   const NODE_OPERATOR_ID = 1n;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, proxyAdmin, stakingRouterAdmin, user, reporter] = await ethers.getSigners();
 
     depositContract = await ethers.deployContract("DepositContract__MockForBeaconChainDepositor", deployer);

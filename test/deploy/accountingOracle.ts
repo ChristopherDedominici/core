@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import hre from "hardhat";
 
 import type { AccountingOracle, HashConsensus__Harness, ReportProcessor__Mock } from "typechain-types/index.js";
 
@@ -9,7 +10,6 @@ import {
   SECONDS_PER_SLOT,
   SLOTS_PER_EPOCH,
 } from "lib/constants.js";
-import { ethers } from "lib/hardhat.js";
 import {
   EXTRA_DATA_FORMAT_EMPTY,
   EXTRA_DATA_FORMAT_LIST,
@@ -24,6 +24,7 @@ export const ORACLE_LAST_COMPLETED_EPOCH = 2n * EPOCHS_PER_FRAME;
 export const ORACLE_LAST_REPORT_SLOT = ORACLE_LAST_COMPLETED_EPOCH * SLOTS_PER_EPOCH;
 
 async function deployMockAccountingAndStakingRouter() {
+  const { ethers } = await hre.network.getOrCreate();
   const stakingRouter = await ethers.deployContract("StakingRouter__MockForAccountingOracle");
   const withdrawalQueue = await ethers.deployContract("WithdrawalQueue__MockForAccountingOracle");
   const accounting = await ethers.deployContract("Accounting__MockForAccountingOracle");
@@ -31,6 +32,7 @@ async function deployMockAccountingAndStakingRouter() {
 }
 
 async function deployMockLazyOracle() {
+  const { ethers } = await hre.network.getOrCreate();
   return ethers.deployContract("LazyOracle__MockForAccountingOracle");
 }
 
@@ -46,6 +48,7 @@ export async function deployAccountingOracleSetup(
     lidoLocatorAddr = null as string | null,
   } = {},
 ) {
+  const { ethers } = await hre.network.getOrCreate();
   const locator = await deployLidoLocator();
   const locatorAddr = await locator.getAddress();
   const { accounting, stakingRouter, withdrawalQueue } = await getLidoAndStakingRouter();
@@ -143,6 +146,7 @@ async function deployOracleReportSanityCheckerForAccounting(
   accounting: string,
   admin: string,
 ) {
+  const { ethers } = await hre.network.getOrCreate();
   const exitedValidatorsPerDayLimit = 55;
   const appearedValidatorsPerDayLimit = 100;
   return await ethers.getContractFactory("OracleReportSanityChecker").then((f) =>

@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { type ContractTransactionResponse, formatEther, Result } from "ethers";
+import { AbiCoder, type ContractTransactionResponse, formatEther, keccak256, Result } from "ethers";
+import hre from "hardhat";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
@@ -10,7 +11,6 @@ import { impersonate } from "../../account.js";
 import { certainAddress } from "../../address.js";
 import { BigIntMath } from "../../bigint-math.js";
 import { HASH_CONSENSUS_FAR_FUTURE_EPOCH, ONE_GWEI } from "../../constants.js";
-import { ethers } from "../../hardhat.js";
 import { log } from "../../log.js";
 import { EXTRA_DATA_FORMAT_EMPTY, EXTRA_DATA_FORMAT_LIST, prepareExtraData } from "../../oracle.js";
 import { advanceChainTime, getCurrentBlockTimestamp } from "../../time.js";
@@ -83,6 +83,7 @@ export const report = async (
     vaultsDataTreeCid = "",
   }: OracleReportParams = {},
 ): Promise<OracleReportResults> => {
+  const { ethers } = await hre.network.getOrCreate();
   const { hashConsensus, lido, elRewardsVault, withdrawalVault, burner, accountingOracle } = ctx.contracts;
 
   if (waitNextReportTime) {
@@ -780,8 +781,8 @@ export const calcReportDataHash = (items: ReturnType<typeof getReportDataItems>)
     "uint256", // extraDataItemsCount
   ];
 
-  const data = ethers.AbiCoder.defaultAbiCoder().encode([`(${types.join(",")})`], [items]);
-  return ethers.keccak256(data);
+  const data = AbiCoder.defaultAbiCoder().encode([`(${types.join(",")})`], [items]);
+  return keccak256(data);
 };
 
 /**

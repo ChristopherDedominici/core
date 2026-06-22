@@ -1,11 +1,12 @@
 import assert from "assert";
+import hre from "hardhat";
 import { readUpgradeParameters } from "scripts/utils/upgrade.js";
 
 import { deployImplementation } from "lib/deploy.js";
-import { ethers } from "lib/hardhat.js";
 import { Sk } from "lib/state-file.js";
 
 export async function main(): Promise<void> {
+  const { ethers } = await hre.network.getOrCreate();
   const deployer = (await ethers.provider.getSigner()).address;
   assert.equal(process.env.DEPLOYER, deployer);
 

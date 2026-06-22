@@ -1,13 +1,14 @@
 import { expect } from "chai";
 import { randomBytes } from "crypto";
 import { hexlify } from "ethers";
+import hre from "hardhat";
 
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { StakingRouter__Harness } from "typechain-types/index.js";
 
 import { certainAddress } from "lib/address.js";
-import { ethers } from "lib/hardhat.js";
 import { proxify } from "lib/proxy.js";
 
 import { Snapshot } from "test/suite/index.js";
@@ -19,6 +20,8 @@ enum Status {
 }
 
 context("StakingRouter.sol:status-control", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
   let user: HardhatEthersSigner;
@@ -29,6 +32,8 @@ context("StakingRouter.sol:status-control", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, admin, user] = await ethers.getSigners();
 
     // deploy staking router

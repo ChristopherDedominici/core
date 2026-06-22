@@ -1,11 +1,12 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
+import hre from "hardhat";
 
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { HashConsensus } from "typechain-types/index.js";
 
-import { ethers } from "lib/hardhat.js";
 import { ether, impersonate } from "lib/index.js";
 import {
   calcReportDataHash,
@@ -21,6 +22,8 @@ import { Snapshot, ZERO_HASH } from "test/suite/index.js";
 const UINT64_MAX = 2n ** 64n - 1n;
 
 describe("Hash consensus negative scenarios", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let stranger: HardhatEthersSigner;
   let hashConsensus: HashConsensus;
@@ -30,6 +33,8 @@ describe("Hash consensus negative scenarios", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     hashConsensus = ctx.contracts.hashConsensus;
     [stranger] = await ethers.getSigners();

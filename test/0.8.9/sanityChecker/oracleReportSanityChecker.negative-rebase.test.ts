@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import { parseUnits, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
@@ -13,7 +15,6 @@ import type {
 } from "typechain-types/index.js";
 
 import { impersonate } from "lib/account.js";
-import { artifacts, ethers } from "lib/hardhat.js";
 import { getCurrentBlockTimestamp } from "lib/time.js";
 import { ether } from "lib/units.js";
 
@@ -21,7 +22,11 @@ import { Snapshot } from "test/suite/index.js";
 
 const SLOTS_PER_DAY = 7200n;
 
+const artifacts = hre.artifacts;
+
 describe("OracleReportSanityChecker.sol:negative-rebase", () => {
+  let ethers: HardhatEthers;
+
   let locator: LidoLocator__MockForSanityChecker;
   let checker: OracleReportSanityChecker;
   let accountingOracle: AccountingOracle__MockForSanityChecker;
@@ -60,6 +65,8 @@ describe("OracleReportSanityChecker.sol:negative-rebase", () => {
   };
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer] = await ethers.getSigners();
 
     const sanityCheckerAddress = deployer.address;

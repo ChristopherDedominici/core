@@ -1,6 +1,7 @@
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthers, type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import type { LidoLocator, ValidatorsExitBus__Harness } from "typechain-types/index.js";
 
@@ -10,18 +11,21 @@ import {
   SLOTS_PER_EPOCH,
   VEBO_CONSENSUS_VERSION,
 } from "lib/constants.js";
-import { ethers } from "lib/hardhat.js";
 
 import { deployLidoLocator } from "test/deploy/index.js";
 import { Snapshot } from "test/suite/index.js";
 
 describe("ValidatorsExitBusOracle.sol:finalizeUpgrade_v2", () => {
+  let ethers: HardhatEthers;
+
   let originalState: string;
   let locator: LidoLocator;
   let oracle: ValidatorsExitBus__Harness;
   let admin: HardhatEthersSigner;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     locator = await deployLidoLocator();
     [admin] = await ethers.getSigners();
     oracle = await ethers.deployContract("ValidatorsExitBus__Harness", [12n, 100n, await locator.getAddress()]);

@@ -1,13 +1,15 @@
 import { expect } from "chai";
 import { ContractTransactionReceipt, hexlify } from "ethers";
+import hre from "hardhat";
 
 import { SecretKey } from "@chainsafe/blst";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import type { Dashboard, SSZBLSHelpers, StakingVault } from "typechain-types/index.js";
 
 import { TOTAL_BASIS_POINTS } from "lib/constants.js";
-import { ethers, networkHelpers } from "lib/hardhat.js";
 import {
   days,
   ether,
@@ -50,6 +52,9 @@ const VAULT_NODE_OPERATOR_FEE = 3_00n; // 3% node operator performance fee
 const CONFIRM_EXPIRY = days(7n);
 
 describe("Scenario: Staking Vaults Happy Path", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
 
@@ -68,6 +73,8 @@ describe("Scenario: Staking Vaults Happy Path", () => {
   let stakingVaultMaxMintingShares = 0n;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     snapshot = await Snapshot.take();
 

@@ -1,6 +1,7 @@
+import hre from "hardhat";
+
 import { loadContract } from "lib/contract.js";
 import { makeTx } from "lib/deploy.js";
-import { ethers } from "lib/hardhat.js";
 import { streccak } from "lib/keccak.js";
 import { readNetworkState, Sk } from "lib/state-file.js";
 
@@ -21,8 +22,9 @@ const SDVT_STAKING_MODULE_MAX_DEPOSITS_PER_BLOCK = 150;
 const SDVT_STAKING_MODULE_MIN_DEPOSIT_BLOCK_DISTANCE = 25;
 
 export async function main() {
+  const { ethers } = await hre.network.getOrCreate();
   const deployer = (await ethers.provider.getSigner()).address;
-  const state = readNetworkState({ deployer });
+  const state = await readNetworkState({ deployer });
 
   // Get contract instances
   const stakingRouter = await loadContract("StakingRouter", state.stakingRouter.proxy.address);
