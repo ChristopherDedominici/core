@@ -54,7 +54,9 @@ describe("Integration: Withdrawal edge cases", () => {
 
       const stethInitialBalance = await lido.balanceOf(holder.address);
 
-      await report(ctx, { clDiff: ether("-1"), excludeVaultsBalances: true });
+      // reportBurner: false — pre-existing Burner cover/non-cover shares on the fork would
+      // burn during the report and produce a positive rebase that masks the clDiff we set.
+      await report(ctx, { clDiff: ether("-1"), excludeVaultsBalances: true, reportBurner: false });
 
       const stethFirstNegativeReportBalance = await lido.balanceOf(holder.address);
 
@@ -67,7 +69,7 @@ describe("Integration: Withdrawal edge cases", () => {
       const [firstRequestEvent] = findEventsWithInterfaces(firstRequestReceipt!, "WithdrawalRequested", [wq.interface]);
       const firstRequestId = firstRequestEvent!.args.requestId;
 
-      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true, reportBurner: false });
 
       const stethSecondNegativeReportBalance = await lido.balanceOf(holder.address);
 
@@ -90,7 +92,7 @@ describe("Integration: Withdrawal edge cases", () => {
       expect(firstStatus.amountOfStETH).to.equal(secondStatus.amountOfStETH);
       expect(firstStatus.amountOfShares).to.be.lt(secondStatus.amountOfShares);
 
-      await report(ctx, { clDiff: ether("0.0001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.0001"), excludeVaultsBalances: true, reportBurner: false });
 
       expect(await wq.isBunkerModeActive()).to.be.false;
 
@@ -125,7 +127,7 @@ describe("Integration: Withdrawal edge cases", () => {
       // Submit initial stETH deposit
       await lido.connect(holder).submit(ethers.ZeroAddress, { value: amount });
 
-      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true, reportBurner: false });
 
       // Create withdrawal request
       await lido.connect(holder).approve(wq.target, amount);
@@ -146,7 +148,7 @@ describe("Integration: Withdrawal edge cases", () => {
       expect(status.isFinalized).to.be.false;
 
       // Submit next report to finalize request
-      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true, reportBurner: false });
 
       // Verify request finalized
       const [finalizedStatus] = await wq.getWithdrawalStatus([...requestIds]);
@@ -181,7 +183,7 @@ describe("Integration: Withdrawal edge cases", () => {
       await lido.connect(holder).submit(ethers.ZeroAddress, { value: amount });
 
       // First rebase - positive
-      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.false;
 
       // Create first withdrawal request
@@ -193,7 +195,7 @@ describe("Integration: Withdrawal edge cases", () => {
 
     it("should handle second (negative) rebase correctly", async () => {
       // Second rebase - negative
-      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.true;
 
       // Verify first request finalized
@@ -211,7 +213,7 @@ describe("Integration: Withdrawal edge cases", () => {
 
     it("should handle third (negative) rebase correctly", async () => {
       // Third rebase - negative
-      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.true;
 
       // Create third withdrawal request
@@ -223,7 +225,7 @@ describe("Integration: Withdrawal edge cases", () => {
 
     it("should handle fourth (positive) rebase correctly", async () => {
       // Fourth rebase - positive
-      await report(ctx, { clDiff: ether("0.0000001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.0000001"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.false;
 
       // Verify all requests finalized
