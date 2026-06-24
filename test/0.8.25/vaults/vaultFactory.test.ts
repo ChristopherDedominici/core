@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   Dashboard,
   DepositContract__MockForBeaconChainDepositor,
   LazyOracle__MockForNodeOperatorFee,
@@ -18,16 +18,20 @@ import {
   VaultFactory,
   VaultHub,
   WstETH__Harness,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { days, ether, GENESIS_FORK_VERSION, randomAddress } from "lib";
-import { createVaultProxy } from "lib/protocol/helpers";
-import { createVaultProxyWithoutConnectingToVaultHub } from "lib/protocol/helpers/vaults";
+import { randomAddress } from "lib/address.js";
+import { GENESIS_FORK_VERSION } from "lib/constants.js";
+import { createVaultProxy, createVaultProxyWithoutConnectingToVaultHub } from "lib/protocol/helpers/vaults.js";
+import { days } from "lib/time.js";
+import { ether } from "lib/units.js";
 
-import { deployLidoLocator, updateLidoLocatorImplementation } from "test/deploy";
-import { Snapshot, VAULTS_MAX_RELATIVE_SHARE_LIMIT_BP } from "test/suite";
+import { deployLidoLocator, updateLidoLocatorImplementation } from "test/deploy/index.js";
+import { Snapshot, VAULTS_MAX_RELATIVE_SHARE_LIMIT_BP } from "test/suite/index.js";
 
 describe("VaultFactory.sol", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
   let holder: HardhatEthersSigner;
@@ -57,6 +61,8 @@ describe("VaultFactory.sol", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, admin, holder, operator, stranger, vaultOwner1, vaultOwner2] = await ethers.getSigners();
 
     steth = await ethers.deployContract("StETH__HarnessForVaultHub", [holder], {

@@ -1,28 +1,30 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Dashboard, StakingVault, VaultHub } from "typechain-types";
+import type { Dashboard, StakingVault, VaultHub } from "typechain-types/index.js";
 
-import { advanceChainTime, days, ether, impersonate, randomAddress, TOTAL_BASIS_POINTS } from "lib";
+import { advanceChainTime, days, ether, impersonate, randomAddress, TOTAL_BASIS_POINTS } from "lib/index.js";
 import {
   createVaultWithDashboard,
   getProtocolContext,
   getPubkeys,
-  ProtocolContext,
+  type ProtocolContext,
   reportVaultDataWithProof,
   setupLidoForVaults,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 const SAMPLE_PUBKEY = "0x" + "ab".repeat(48);
 const TEST_STETH_AMOUNT_WEI = 100n;
 const CONNECT_DEPOSIT = ether("1");
 
 describe("Integration: Actions with vault connected to VaultHub", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -40,6 +42,8 @@ describe("Integration: Actions with vault connected to VaultHub", () => {
   let testSharesAmountWei: bigint;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     originalSnapshot = await Snapshot.take();
 

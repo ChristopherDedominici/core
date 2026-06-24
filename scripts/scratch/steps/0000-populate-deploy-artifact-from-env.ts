@@ -1,7 +1,7 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { log } from "lib";
-import { persistNetworkState, readNetworkState, resetStateFileFromDeployParams, Sk } from "lib/state-file";
+import { log } from "lib/index.js";
+import { persistNetworkState, readNetworkState, resetStateFileFromDeployParams, Sk } from "lib/state-file.js";
 
 function getEnvVariable(name: string, defaultValue?: string): string {
   const value = process.env[name] ?? defaultValue;
@@ -13,6 +13,7 @@ function getEnvVariable(name: string, defaultValue?: string): string {
 }
 
 export async function main() {
+  const { ethers } = await hre.network.getOrCreate();
   // Retrieve environment variables
   const deployer = ethers.getAddress(getEnvVariable("DEPLOYER"));
   const gateSealFactoryAddress = getEnvVariable("GATE_SEAL_FACTORY", "");
@@ -24,7 +25,7 @@ export async function main() {
   const genesisForkVersion = getEnvVariable("GENESIS_FORK_VERSION", "0x00000000");
 
   await resetStateFileFromDeployParams();
-  const state = readNetworkState();
+  const state = await readNetworkState();
 
   // Update network-related information
   state.networkId = parseInt(await ethers.provider.send("net_version"));
@@ -68,7 +69,7 @@ export async function main() {
   // Initialize gas usage tracking
   state[Sk.scratchDeployGasUsed] = 0n.toString();
 
-  persistNetworkState(state);
+  await persistNetworkState(state);
 
   log.emptyLine(); // Add an empty line for better readability
 }

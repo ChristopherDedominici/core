@@ -1,15 +1,17 @@
 import { expect } from "chai";
 import { randomBytes } from "crypto";
 import { hexlify } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { StakingRouter__Harness } from "typechain-types";
+import type { StakingRouter__Harness } from "typechain-types/index.js";
 
-import { certainAddress, proxify } from "lib";
+import { certainAddress } from "lib/address.js";
+import { proxify } from "lib/proxy.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 enum Status {
   Active,
@@ -18,6 +20,8 @@ enum Status {
 }
 
 context("StakingRouter.sol:status-control", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
   let user: HardhatEthersSigner;
@@ -28,6 +32,8 @@ context("StakingRouter.sol:status-control", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, admin, user] = await ethers.getSigners();
 
     // deploy staking router
@@ -35,7 +41,8 @@ context("StakingRouter.sol:status-control", () => {
     const allocLib = await ethers.deployContract("MinFirstAllocationStrategy", deployer);
     const stakingRouterFactory = await ethers.getContractFactory("StakingRouter__Harness", {
       libraries: {
-        ["contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
+        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]:
+          await allocLib.getAddress(),
       },
     });
 
@@ -93,7 +100,7 @@ context("StakingRouter.sol:status-control", () => {
     it("Not emit event when new status is the same", async () => {
       await stakingRouter.setStakingModuleStatus(moduleId, Status.DepositsPaused);
 
-      await expect(stakingRouter.testing_setStakingModuleStatus(moduleId, Status.DepositsPaused)).to.not.emit(
+      await expect(stakingRouter.harness_setStakingModuleStatus(moduleId, Status.DepositsPaused)).to.not.emit(
         stakingRouter,
         "StakingModuleStatusSet",
       );

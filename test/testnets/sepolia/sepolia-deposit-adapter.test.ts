@@ -1,20 +1,24 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { ISepoliaDepositContract, SepoliaDepositAdapter } from "typechain-types";
+import type { ISepoliaDepositContract, SepoliaDepositAdapter } from "typechain-types/index.js";
 
-import { ether, findEvents } from "lib";
+import { findEvents } from "lib/event.js";
+import { ether } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 // To run tests on the Sepolia network, you will need node with sepolia fork running.
 // For example: anvil --port 8545 --fork-url https://sepolia.infura.io/v3/<token>
 // Then run the tests with the following command:
 // RPC_URL=http://127.0.0.1:8545 npx hardhat test test/testnets/sepolia/sepolia-deposit-adapter.test.ts --network sepolia
 describe("SepoliaDepositAdapter.sol", () => {
+  let ethers: HardhatEthers;
+
   let originalState: string;
 
   let owner: HardhatEthersSigner;
@@ -34,6 +38,7 @@ describe("SepoliaDepositAdapter.sol", () => {
   };
 
   before(async function () {
+    ({ ethers } = await hre.network.getOrCreate());
     const { chainId } = await ethers.provider.getNetwork();
     log("chainId", chainId);
     if (chainId !== 11155111n) {

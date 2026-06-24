@@ -1,17 +1,22 @@
 import { expect } from "chai";
-import { Signer, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import { type Signer, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
-import { HashConsensus__Harness, ReportProcessor__Mock } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { BASE_CONSENSUS_VERSION, streccak } from "lib";
+import type { HashConsensus__Harness, ReportProcessor__Mock } from "typechain-types/index.js";
 
-import { deployHashConsensus, HASH_1, HASH_2 } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { BASE_CONSENSUS_VERSION } from "lib/constants.js";
+import { streccak } from "lib/keccak.js";
+
+import { deployHashConsensus, HASH_1, HASH_2 } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 const manageReportProcessorRoleKeccak256 = streccak("MANAGE_REPORT_PROCESSOR_ROLE");
 
 describe("HashConsensus.sol:reportProcessor", function () {
+  let ethers: HardhatEthers;
+
   let admin: Signer;
   let member1: Signer;
   let member2: Signer;
@@ -37,6 +42,10 @@ describe("HashConsensus.sol:reportProcessor", function () {
   const rollback = async () => {
     snapshot = await Snapshot.refresh(snapshot);
   };
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   before(deploy);
 

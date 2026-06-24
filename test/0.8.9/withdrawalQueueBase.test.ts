@@ -1,15 +1,17 @@
 import { expect } from "chai";
 import { parseUnits, Result } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance, time } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers, HardhatEthersProvider } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Receiver__MockForWithdrawalQueueBase, WithdrawalsQueueBase__Harness } from "typechain-types";
+import type { Receiver__MockForWithdrawalQueueBase, WithdrawalsQueueBase__Harness } from "typechain-types/index.js";
 
-import { ether, shareRate, shares, WITHDRAWAL_MAX_BATCHES_LENGTH } from "lib";
+import { WITHDRAWAL_MAX_BATCHES_LENGTH } from "lib/constants.js";
+import { ether, shareRate, shares } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 const buildBatchCalculationState = (...args: unknown[]) => ({
   remainingEthBudget: args[0] as bigint,
@@ -21,6 +23,9 @@ const buildBatchCalculationState = (...args: unknown[]) => ({
 const MAX_BATCHES = Number(WITHDRAWAL_MAX_BATCHES_LENGTH);
 
 describe("WithdrawalQueueBase.sol", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let owner: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
 
@@ -29,7 +34,7 @@ describe("WithdrawalQueueBase.sol", () => {
   let receiver: Receiver__MockForWithdrawalQueueBase;
 
   let originalState: string;
-  let provider: typeof ethers.provider;
+  let provider: HardhatEthersProvider;
 
   // Required for _findCheckpointHint, _calculateClaimableEther, _calcBatch tests
   const setUpRequestsState = async (requestsCount: number, finalizedCount: number) => {
@@ -42,6 +47,8 @@ describe("WithdrawalQueueBase.sol", () => {
   };
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     ({ provider } = ethers);
     [owner, stranger] = await ethers.getSigners();
 
@@ -163,7 +170,7 @@ describe("WithdrawalQueueBase.sol", () => {
     it("Stops on max timestamp", async () => {
       await queue.harness__enqueue(ether("1.00"), shares(1n), owner);
 
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       const calc = await queue.calculateFinalizationBatches(
         shareRate(1n),
@@ -248,10 +255,10 @@ describe("WithdrawalQueueBase.sol", () => {
       const maxShareRate = parseUnits("1", 26); // 0.1
 
       await queue.harness__enqueue(ether("1.00"), shares(1n), owner);
-      await queue.harness__setLastReportTimestamp(await time.latest());
+      await queue.harness__setLastReportTimestamp(await networkHelpers.time.latest());
 
       await queue.harness__enqueue(ether("1.00"), shares(1n), owner);
-      await queue.harness__setLastReportTimestamp(await time.latest());
+      await queue.harness__setLastReportTimestamp(await networkHelpers.time.latest());
 
       const calc1 = await queue.calculateFinalizationBatches(
         maxShareRate,
@@ -287,10 +294,10 @@ describe("WithdrawalQueueBase.sol", () => {
       const maxShareRate = shareRate(1n);
 
       await queue.harness__enqueue(ether("10.00"), shares(500n), owner);
-      await queue.harness__setLastReportTimestamp(await time.latest());
+      await queue.harness__setLastReportTimestamp(await networkHelpers.time.latest());
 
       await queue.harness__enqueue(ether("10.00"), shares(500n), owner);
-      await queue.harness__setLastReportTimestamp(await time.latest());
+      await queue.harness__setLastReportTimestamp(await networkHelpers.time.latest());
 
       const calc1 = await queue.calculateFinalizationBatches(
         maxShareRate,
@@ -463,7 +470,7 @@ describe("WithdrawalQueueBase.sol", () => {
     it("Returns the queue status", async () => {
       await queue.harness__enqueue(ether("1.00"), shares(1n), owner);
 
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       const status = await queue.harness__getStatus(1);
 
@@ -586,7 +593,7 @@ describe("WithdrawalQueueBase.sol", () => {
     });
 
     it("Reverts if request is already claimed", async () => {
-      await setBalance(queueAddress, ether("10.00"));
+      await networkHelpers.setBalance(queueAddress, ether("10.00"));
 
       await queue.harness__enqueue(ether("1.00"), shares(1n), owner);
       await queue.harness__finalize(1, ether("1.00"), shareRate(1n));
@@ -605,7 +612,7 @@ describe("WithdrawalQueueBase.sol", () => {
     });
 
     it("Reverts if not owner", async () => {
-      await setBalance(queueAddress, ether("10.00"));
+      await networkHelpers.setBalance(queueAddress, ether("10.00"));
 
       await queue.harness__enqueue(ether("1.00"), shares(1n), owner);
       await queue.harness__finalize(1, ether("1.00"), shareRate(1n));
@@ -616,7 +623,7 @@ describe("WithdrawalQueueBase.sol", () => {
     });
 
     it("Claims the request", async () => {
-      await setBalance(queueAddress, ether("10.00"));
+      await networkHelpers.setBalance(queueAddress, ether("10.00"));
 
       await queue.harness__enqueue(ether("1.00"), shares(1n), owner);
       await queue.prefinalize([1], shareRate(1n));
@@ -705,7 +712,7 @@ describe("WithdrawalQueueBase.sol", () => {
     });
 
     it("Reverts if not successful transfer", async () => {
-      await setBalance(queueAddress, ether("10.00"));
+      await networkHelpers.setBalance(queueAddress, ether("10.00"));
 
       await receiver.mock__setCanReceive(false);
 
@@ -716,7 +723,7 @@ describe("WithdrawalQueueBase.sol", () => {
     });
 
     it("Sends value to the recipient", async () => {
-      await setBalance(queueAddress, ether("10.00"));
+      await networkHelpers.setBalance(queueAddress, ether("10.00"));
 
       const balanceBefore = await provider.getBalance(stranger);
 
@@ -730,7 +737,7 @@ describe("WithdrawalQueueBase.sol", () => {
 
   context("_calcBatch", () => {
     it("Returns shareRate and shares for equal values", async () => {
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       const prevRequest = {
         cumulativeStETH: 1000,
@@ -755,7 +762,7 @@ describe("WithdrawalQueueBase.sol", () => {
     });
 
     it("Returns shareRate and shares for different values", async () => {
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       const prevRequest = {
         cumulativeStETH: 2000,
@@ -786,7 +793,7 @@ describe("WithdrawalQueueBase.sol", () => {
     });
 
     it("Returns the last report timestamp", async () => {
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       await queue.harness__setLastReportTimestamp(timestamp);
 
@@ -836,7 +843,7 @@ describe("WithdrawalQueueBase.sol", () => {
 
   context("_setLastReportTimestamp", () => {
     it("Sets the last report timestamp", async () => {
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       expect(await queue.harness__getLastReportTimestamp()).to.equal(0);
 

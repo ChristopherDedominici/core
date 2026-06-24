@@ -1,5 +1,5 @@
 import fs from "fs";
-import { artifacts } from "hardhat";
+import hre from "hardhat";
 import path from "path";
 
 export async function loadArtifact(artifactName: string, networkName: string) {
@@ -12,6 +12,6 @@ export async function loadArtifact(artifactName: string, networkName: string) {
     const artifactPath = path.join(extArtifactsDir, artifactName.substring(9) + ".json");
     return JSON.parse(fs.readFileSync(artifactPath, "utf8"));
   } else {
-    return await artifacts.readArtifact(artifactName);
+    return await hre.artifacts.readArtifact(artifactName);
   }
 }

@@ -1,15 +1,18 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { HexString } from "ethers/lib.commonjs/utils/data";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { OracleDaemonConfig, OracleDaemonConfig__factory } from "typechain-types";
+import type { OracleDaemonConfig } from "typechain-types/index.js";
+import { OracleDaemonConfig__factory } from "typechain-types/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("OracleDaemonConfig.sol", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
@@ -21,9 +24,11 @@ describe("OracleDaemonConfig.sol", () => {
   let originalState: string;
 
   const defaultKey: string = "key1";
-  const defaultValue: HexString = "0xbec001";
+  const defaultValue: `0x${string}` = "0xbec001";
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, admin, stranger, configPrimaryManager, configSecondaryManager] = await ethers.getSigners();
 
     oracleDaemonConfig = await new OracleDaemonConfig__factory(deployer).deploy(admin, [

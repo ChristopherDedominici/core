@@ -1,16 +1,18 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { certainAddress, ether, impersonate } from "lib";
-import { LoadedContract } from "lib/contract";
-import { getProtocolContext, ProtocolContext } from "lib/protocol";
-import { randomPubkeys, randomSignatures } from "lib/protocol/helpers/staking-module";
+import { type LoadedContract } from "lib/contract.js";
+import { certainAddress, ether, impersonate } from "lib/index.js";
+import { randomPubkeys, randomSignatures } from "lib/protocol/helpers/staking-module.js";
+import { getProtocolContext, type ProtocolContext } from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Staking module", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let stranger: HardhatEthersSigner;
 
@@ -18,6 +20,8 @@ describe("Integration: Staking module", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
 
     snapshot = await Snapshot.take();

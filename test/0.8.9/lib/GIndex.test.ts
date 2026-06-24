@@ -1,10 +1,12 @@
 import { expect } from "chai";
-import { BigNumberish, BytesLike, randomBytes, ZeroHash, zeroPadValue } from "ethers";
-import { ethers } from "hardhat";
+import { type BigNumberish, type BytesLike, randomBytes, ZeroHash, zeroPadValue } from "ethers";
+import hre from "hardhat";
 
-import { GIndex__Harness, GIndexLibrary__Harness } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Snapshot } from "test/suite";
+import type { GIndex__Harness, GIndexLibrary__Harness } from "typechain-types/index.js";
+
+import { Snapshot } from "test/suite/index.js";
 
 /**
  * Wrapper for the GIndex operations to match the Solidity test
@@ -54,6 +56,8 @@ class GIndexWrapper {
 }
 
 describe("GIndex", () => {
+  let ethers: HardhatEthers;
+
   let originalState: string;
 
   let gIndexTest: GIndex__Harness;
@@ -65,6 +69,8 @@ describe("GIndex", () => {
   let MAX: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     // Deploy the test contracts
     gIndexTest = await ethers.deployContract("GIndex__Harness");
     library = await ethers.deployContract("GIndexLibrary__Harness");
@@ -149,13 +155,17 @@ describe("GIndex", () => {
   });
 
   it("test_concat_BigIndicesBorderCases", async () => {
-    await expect(await library.concat(await gIndex.pack(2n ** 9n, 0), await gIndex.pack(2n ** 238n, 0))).to.not.be
-      .reverted;
+    await expect(await library.concat(await gIndex.pack(2n ** 9n, 0), await gIndex.pack(2n ** 238n, 0))).to.not.revert(
+      ethers,
+    );
 
-    await expect(await library.concat(await gIndex.pack(2n ** 47n, 0), await gIndex.pack(2n ** 200n, 0))).to.not.be
-      .reverted;
+    await expect(await library.concat(await gIndex.pack(2n ** 47n, 0), await gIndex.pack(2n ** 200n, 0))).to.not.revert(
+      ethers,
+    );
 
-    await expect(library.concat(await gIndex.pack(2n ** 199n, 0), await gIndex.pack(2n ** 48n, 0))).to.not.be.reverted;
+    await expect(library.concat(await gIndex.pack(2n ** 199n, 0), await gIndex.pack(2n ** 48n, 0))).to.not.revert(
+      ethers,
+    );
   });
 
   it("test_concat_RevertsIfTooBigIndices", async () => {

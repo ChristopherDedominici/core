@@ -1,21 +1,26 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { getStorageAt } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import {
+import type {
   WithdrawalsManagerProxy,
   WithdrawalsManagerStub,
   WithdrawalsVault__MockForWithdrawalManagerProxy,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { certainAddress, streccak } from "lib";
+import { certainAddress } from "lib/address.js";
+import { streccak } from "lib/keccak.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("WithdrawalsManagerProxy.sol", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let deployer: HardhatEthersSigner;
   let voting: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
@@ -27,6 +32,8 @@ describe("WithdrawalsManagerProxy.sol", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     [deployer, voting, stranger] = await ethers.getSigners();
 
     stub = await ethers.deployContract("WithdrawalsManagerStub", deployer);
@@ -69,7 +76,7 @@ describe("WithdrawalsManagerProxy.sol", () => {
       const storageSlot = streccak("someNumberSlot");
       const someNumber = 1n;
 
-      expect(await getStorageAt(proxyAddr, storageSlot)).to.equal(0n);
+      expect(await networkHelpers.getStorageAt(proxyAddr, storageSlot)).to.equal(0n);
 
       // bytecode to execute in proxy context
       const bytecode = newImpl.interface.encodeFunctionData("mock__changeNumber", [someNumber]);
@@ -77,7 +84,7 @@ describe("WithdrawalsManagerProxy.sol", () => {
       await expect(proxy.proxy_upgradeTo(newImpl, bytecode)).to.emit(proxy, "Upgraded").withArgs(newImpl);
       expect(await proxy.implementation()).to.equal(newImpl);
 
-      expect(await getStorageAt(proxyAddr, storageSlot)).to.equal(someNumber);
+      expect(await networkHelpers.getStorageAt(proxyAddr, storageSlot)).to.equal(someNumber);
     });
   });
 

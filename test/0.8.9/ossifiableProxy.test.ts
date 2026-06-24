@@ -1,12 +1,16 @@
 import { expect } from "chai";
-import { Signer, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import { type Signer, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
-import { Initializable__Mock, OssifiableProxy } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Snapshot } from "test/suite";
+import type { Initializable__Mock, OssifiableProxy } from "typechain-types/index.js";
+
+import { Snapshot } from "test/suite/index.js";
 
 describe("OssifiableProxy.sol", () => {
+  let ethers: HardhatEthers;
+
   let admin: Signer;
   let stranger: Signer;
   let currentImpl: Initializable__Mock;
@@ -16,6 +20,8 @@ describe("OssifiableProxy.sol", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, stranger] = await ethers.getSigners();
 
     currentImpl = await ethers.deployContract("Initializable__Mock");

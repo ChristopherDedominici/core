@@ -1,42 +1,42 @@
 import { expect } from "chai";
 import { keccakFromString } from "ethereumjs-util";
-import { BigNumberish, getBigInt, ZeroHash } from "ethers";
-import { ethers } from "hardhat";
+import { type BigNumberish, getBigInt, ZeroHash } from "ethers";
+import hre from "hardhat";
 
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
-import {
+import type {
   Accounting__MockForAccountingOracle,
   AccountingOracle__Harness,
   HashConsensus__Harness,
   OracleReportSanityChecker,
   StakingRouter__MockForAccountingOracle,
   WithdrawalQueue__MockForAccountingOracle,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
+import { AO_CONSENSUS_VERSION, GENESIS_TIME, ONE_GWEI, SECONDS_PER_SLOT } from "lib/constants.js";
 import {
-  AO_CONSENSUS_VERSION,
   calcExtraDataListHash,
   calcReportDataHash,
   encodeExtraDataItems,
-  ether,
   EXTRA_DATA_FORMAT_EMPTY,
   EXTRA_DATA_FORMAT_LIST,
-  ExtraDataType,
-  GENESIS_TIME,
+  type ExtraDataType,
   getReportDataItems,
-  ONE_GWEI,
-  OracleReport,
+  type OracleReport,
   packExtraDataList,
-  ReportAsArray,
-  SECONDS_PER_SLOT,
-} from "lib";
+  type ReportAsArray,
+} from "lib/oracle.js";
+import { ether } from "lib/units.js";
 
-import { deployAndConfigureAccountingOracle, HASH_1, SLOTS_PER_FRAME } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployAndConfigureAccountingOracle, HASH_1, SLOTS_PER_FRAME } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("AccountingOracle.sol:submitReport", () => {
+  let ethers: HardhatEthers;
+
   let consensus: HashConsensus__Harness;
   let oracle: AccountingOracle__Harness;
   let reportItems: ReportAsArray;
@@ -144,7 +144,11 @@ describe("AccountingOracle.sol:submitReport", () => {
     });
   }
 
-  before(deploy);
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
+    await deploy();
+  });
 
   context("deploying", () => {
     before(takeSnapshot);

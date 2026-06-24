@@ -1,24 +1,26 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Dashboard, LazyOracle, Lido, StakingVault, VaultHub } from "typechain-types";
+import type { Dashboard, LazyOracle, Lido, StakingVault, VaultHub } from "typechain-types/index.js";
 
-import { days, ether, updateBalance } from "lib";
+import { days, ether, updateBalance } from "lib/index.js";
 import {
   calculateLockedValue,
   createVaultWithDashboard,
   getProtocolContext,
-  ProtocolContext,
+  type ProtocolContext,
   reportVaultDataWithProof,
   setupLidoForVaults,
   upDefaultTierShareLimit,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Vault redemptions and fees obligations", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let originalSnapshot: string;
   let snapshot: string;
@@ -39,6 +41,8 @@ describe("Integration: Vault redemptions and fees obligations", () => {
   let stranger: HardhatEthersSigner;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
 
     originalSnapshot = await Snapshot.take();
@@ -828,8 +832,9 @@ describe("Integration: Vault redemptions and fees obligations", () => {
       await dashboard.voluntaryDisconnect();
 
       // we forgive the last fees
-      await expect(reportVaultDataWithProof(ctx, stakingVault, { totalValue, cumulativeLidoFees: ether("1.1") })).not.to
-        .be.reverted;
+      await expect(
+        reportVaultDataWithProof(ctx, stakingVault, { totalValue, cumulativeLidoFees: ether("1.1") }),
+      ).to.not.revert(ethers);
 
       expect(await vaultHub.isPendingDisconnect(stakingVault)).to.be.false;
     });

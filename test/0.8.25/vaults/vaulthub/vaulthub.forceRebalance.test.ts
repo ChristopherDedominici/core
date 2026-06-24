@@ -1,18 +1,21 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Lido, StakingVault__MockForVaultHub, VaultHub } from "typechain-types";
+import type { Lido, StakingVault__MockForVaultHub, VaultHub } from "typechain-types/index.js";
 
-import { BigIntMath } from "lib";
-import { ether } from "lib/units";
+import { BigIntMath } from "lib/bigint-math.js";
+import { ether } from "lib/units.js";
 
-import { deployVaults } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployVaults } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("VaultHub.sol:forceRebalance", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
@@ -29,6 +32,8 @@ describe("VaultHub.sol:forceRebalance", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     [deployer, user, stranger] = await ethers.getSigners();
 
     vaultsContext = await deployVaults({ deployer, admin: user });
@@ -51,7 +56,7 @@ describe("VaultHub.sol:forceRebalance", () => {
     });
 
     it("reverts if vault has no funds", async () => {
-      await setBalance(vaultAddress, 0n);
+      await networkHelpers.setBalance(vaultAddress, 0n);
       await vaultsContext.reportVault({ vault, totalValue: 0n });
 
       await expect(vaultHub.forceRebalance(vaultAddress))
@@ -146,7 +151,7 @@ describe("VaultHub.sol:forceRebalance", () => {
 
         const shortfall = await lido.getPooledEthBySharesRoundUp(shortfallShares);
         const expectedRebalanceAmount = shortfall / 2n;
-        await setBalance(vaultAddress, expectedRebalanceAmount);
+        await networkHelpers.setBalance(vaultAddress, expectedRebalanceAmount);
 
         const expectedSharesToBeBurned = await lido.getSharesByPooledEth(expectedRebalanceAmount);
 
@@ -226,7 +231,7 @@ describe("VaultHub.sol:forceRebalance", () => {
         const balance = expectedRebalanceAmount - expectedRebalanceAmount / 3n;
         const expectedSharesToBeBurned = await lido.getSharesByPooledEth(balance);
 
-        await setBalance(vaultAddress, balance); // cheat to make balance lower than rebalanceShortfall
+        await networkHelpers.setBalance(vaultAddress, balance); // cheat to make balance lower than rebalanceShortfall
         await expect(vaultHub.forceRebalance(vaultAddress))
           .to.emit(vaultHub, "VaultRebalanced")
           .withArgs(vaultAddress, expectedSharesToBeBurned, balance);

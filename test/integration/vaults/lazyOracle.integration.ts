@@ -1,24 +1,26 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Dashboard, LazyOracle, StakingVault, VaultHub } from "typechain-types";
+import type { Dashboard, LazyOracle, StakingVault, VaultHub } from "typechain-types/index.js";
 
-import { advanceChainTime, days, ether, getCurrentBlockTimestamp, impersonate, randomAddress } from "lib";
+import { advanceChainTime, days, ether, getCurrentBlockTimestamp, impersonate, randomAddress } from "lib/index.js";
+import { calculateLockedValue, createVaultsReportTree, type VaultReportItem } from "lib/protocol/helpers/vaults.js";
 import {
   createVaultWithDashboard,
   getProtocolContext,
-  ProtocolContext,
+  type ProtocolContext,
   report,
   reportVaultDataWithProof,
   setupLidoForVaults,
-} from "lib/protocol";
-import { calculateLockedValue, createVaultsReportTree, VaultReportItem } from "lib/protocol/helpers/vaults";
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: LazyOracle", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -33,6 +35,8 @@ describe("Integration: LazyOracle", () => {
   let stranger: HardhatEthersSigner;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     originalSnapshot = await Snapshot.take();
 
@@ -107,12 +111,6 @@ describe("Integration: LazyOracle", () => {
       it("reverts if maxLiabilityShares is less than liabilityShares", async () => {
         await expect(
           reportVaultDataWithProof(ctx, stakingVault, { maxLiabilityShares: 12999n }),
-        ).to.be.revertedWithCustomError(lazyOracle, "InvalidMaxLiabilityShares");
-      });
-
-      it("reverts if maxLiabilityShares is greater than the currently tracked on-chain record.maxLiabilityShares", async () => {
-        await expect(
-          reportVaultDataWithProof(ctx, stakingVault, { maxLiabilityShares: 13002n }),
         ).to.be.revertedWithCustomError(lazyOracle, "InvalidMaxLiabilityShares");
       });
 
@@ -349,7 +347,7 @@ describe("Integration: LazyOracle", () => {
           totalValue: slashedTotalValue,
           waitForNextRefSlot: true,
         }),
-      ).to.not.be.reverted;
+      ).to.not.revert(ethers);
     });
 
     it("InOutDelta cache in fund", async () => {
@@ -558,8 +556,9 @@ describe("Integration: LazyOracle", () => {
 
       it("Should accept report with same cumulative Lido fees (no change)", async () => {
         // Same cumulative fees should be accepted
-        await expect(reportVaultDataWithProof(ctx, stakingVault, { cumulativeLidoFees: ether("5") })).to.not.be
-          .reverted;
+        await expect(reportVaultDataWithProof(ctx, stakingVault, { cumulativeLidoFees: ether("5") })).to.not.revert(
+          ethers,
+        );
 
         expect(await vaultHub.isReportFresh(stakingVault)).to.equal(true);
       });
@@ -576,7 +575,7 @@ describe("Integration: LazyOracle", () => {
             cumulativeLidoFees: ether("5") + validFeeIncrease,
             reportTimestamp: (await lazyOracle.latestReportTimestamp()) + timeDelta,
           }),
-        ).to.not.be.reverted;
+        ).to.not.revert(ethers);
 
         expect(await vaultHub.isReportFresh(stakingVault)).to.equal(true);
 
@@ -611,7 +610,7 @@ describe("Integration: LazyOracle", () => {
             cumulativeLidoFees: ether("5") + maxFeeIncrease,
             reportTimestamp: (await lazyOracle.latestReportTimestamp()) + timeDelta,
           }),
-        ).to.not.be.reverted;
+        ).to.not.revert(ethers);
 
         expect(await vaultHub.isReportFresh(stakingVault)).to.equal(true);
       });
@@ -628,13 +627,132 @@ describe("Integration: LazyOracle", () => {
           reportVaultDataWithProof(ctx, stakingVault, {
             cumulativeLidoFees: ether("5") + validFeeIncrease,
           }),
-        ).to.not.be.reverted;
+        ).to.not.revert(ethers);
 
         const record = await vaultHub.vaultRecord(stakingVault);
         expect(record.cumulativeLidoFees).to.equal(ether("5") + validFeeIncrease);
 
         expect(await vaultHub.isReportFresh(stakingVault)).to.equal(true);
       });
+    });
+  });
+
+  describe("maxLiabilityShares check", () => {
+    beforeEach(async () => {
+      // Fund and mint to establish non-zero liabilityShares and maxLiabilityShares
+      await dashboard.fund({ value: ether("10") });
+      await dashboard.mintShares(owner, 1000n);
+
+      // Bring a fresh report so the on-chain record reflects minted shares
+      await reportVaultDataWithProof(ctx, stakingVault);
+    });
+
+    it("accepts report after previous report reduced maxLiabilityShares on-chain", async () => {
+      const { lido } = ctx.contracts;
+
+      // Step 1: After beforeEach, user has minted 1000 shares
+      // On-chain: liabilityShares = 1000, maxLiabilityShares = 1000
+      const recordAfterMint = await vaultHub.vaultRecord(stakingVault);
+      expect(recordAfterMint.liabilityShares).to.equal(1000n);
+      expect(recordAfterMint.maxLiabilityShares).to.equal(1000n);
+
+      // Step 2: User burns 500 shares
+      // On-chain: liabilityShares = 500, maxLiabilityShares = 1000 (high-water mark stays)
+      const burnStETHAmount = await lido.getPooledEthByShares(500n);
+      await lido.connect(owner).approve(dashboard, burnStETHAmount);
+      await dashboard.burnShares(500n);
+
+      const recordAfterBurn = await vaultHub.vaultRecord(stakingVault);
+      expect(recordAfterBurn.liabilityShares).to.equal(500n);
+      expect(recordAfterBurn.maxLiabilityShares).to.equal(1000n);
+
+      // Steps 3-4: refSlot1 and refSlot2 snapshots are taken while on-chain state is the same
+      // Both snapshots capture: liabilityShares = 500, maxLiabilityShares = 1000
+      const snapshotLiab = 500n;
+      const snapshotMaxLiab = 1000n;
+
+      // Step 5: Report1 (for refSlot1) is delivered
+      // VaultHub == guard: record.maxLiabilityShares (1000) == _reportMaxLiabilityShares (1000) → recalculate
+      // record.maxLiabilityShares = max(record.liabilityShares, _reportLiabilityShares) = max(500, 500) = 500
+      await reportVaultDataWithProof(ctx, stakingVault);
+      const recordAfterReport1 = await vaultHub.vaultRecord(stakingVault);
+      expect(recordAfterReport1.maxLiabilityShares).to.equal(500n);
+
+      // Step 6: Report2 (for refSlot2) is delivered with the SAME snapshot values
+      // _maxLiabilityShares = 1000 (from snapshot taken before report1 reduced it to 500)
+      // Old check: _maxLiabilityShares (1000) > record.maxLiabilityShares (500) → false revert
+      // Fix: removed the > check, keeping only _maxLiabilityShares >= _liabilityShares invariant
+      await expect(
+        reportVaultDataWithProof(ctx, stakingVault, {
+          liabilityShares: snapshotLiab,
+          maxLiabilityShares: snapshotMaxLiab,
+        }),
+      ).to.not.revert(ethers);
+    });
+
+    it("oracle cannot inflate record.maxLiabilityShares beyond on-chain value", async () => {
+      const recordBefore = await vaultHub.vaultRecord(stakingVault);
+      const maxLiabBefore = recordBefore.maxLiabilityShares;
+
+      const inflatedMaxLiab = maxLiabBefore + 1000n;
+
+      // Report with inflated maxLiabilityShares — LazyOracle accepts it,
+      // but VaultHub's `==` guard prevents updating record.maxLiabilityShares
+      await reportVaultDataWithProof(ctx, stakingVault, {
+        liabilityShares: inflatedMaxLiab,
+        maxLiabilityShares: inflatedMaxLiab,
+      });
+
+      const recordAfter = await vaultHub.vaultRecord(stakingVault);
+      // VaultHub rejects the inflation because _reportMaxLiabilityShares != record.maxLiabilityShares
+      expect(recordAfter.maxLiabilityShares).to.equal(maxLiabBefore);
+    });
+
+    it("compromised oracle can only prevent maxLiabilityShares reduction by inflating _reportLiabilityShares", async () => {
+      const { lido } = ctx.contracts;
+
+      const recordBefore = await vaultHub.vaultRecord(stakingVault);
+      const maxLiabBefore = recordBefore.maxLiabilityShares;
+      const liabBefore = recordBefore.liabilityShares;
+
+      // After beforeEach: liabilityShares = 1000, maxLiabilityShares = 1000
+      // Burn 500 shares to create a gap between liabilityShares and maxLiabilityShares
+      const burnStETHAmount = await lido.getPooledEthByShares(500n);
+      await lido.connect(owner).approve(dashboard, burnStETHAmount);
+      await dashboard.burnShares(500n);
+
+      const recordAfterBurn = await vaultHub.vaultRecord(stakingVault);
+      const liabAfterBurn = recordAfterBurn.liabilityShares;
+      expect(liabAfterBurn).to.equal(liabBefore - 500n);
+      expect(recordAfterBurn.maxLiabilityShares).to.equal(maxLiabBefore);
+
+      // Honest report would reduce maxLiabilityShares:
+      // == guard passes (1000 == 1000), recalc: max(500, 500) = 500
+
+      // Compromised oracle inflates _reportLiabilityShares up to maxLiabilityShares,
+      // preventing the reduction and keeping locked value high
+      await reportVaultDataWithProof(ctx, stakingVault, {
+        liabilityShares: maxLiabBefore, // inflated (real on-chain is 500)
+        maxLiabilityShares: maxLiabBefore, // matches on-chain → passes == guard
+      });
+
+      const recordAfterAttack = await vaultHub.vaultRecord(stakingVault);
+      // maxLiabilityShares stays at 1000 instead of dropping to 500
+      // because max(record.liabilityShares=500, _reportLiabilityShares=1000) = 1000
+      expect(recordAfterAttack.maxLiabilityShares).to.equal(maxLiabBefore);
+      // record.liabilityShares is NOT changed by the report — only by mint/burn
+      expect(recordAfterAttack.liabilityShares).to.equal(liabAfterBurn);
+    });
+
+    it("reverts if maxLiabilityShares is less than liabilityShares", async () => {
+      const liab = await vaultHub.liabilityShares(stakingVault);
+
+      await expect(
+        reportVaultDataWithProof(ctx, stakingVault, {
+          liabilityShares: liab,
+          maxLiabilityShares: liab - 1n,
+        }),
+      ).to.be.revertedWithCustomError(lazyOracle, "InvalidMaxLiabilityShares");
     });
   });
 });

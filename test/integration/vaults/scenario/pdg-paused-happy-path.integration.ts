@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import { ContractTransactionReceipt, hexlify } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
 import { SecretKey } from "@chainsafe/blst";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import {
+import type { TierParamsStruct } from "typechain-types/contracts/0.8.25/vaults/OperatorGrid.js";
+import type {
   Dashboard,
   LazyOracle,
   Lido,
@@ -16,8 +17,7 @@ import {
   StakingVault,
   VaultFactory,
   VaultHub,
-} from "typechain-types";
-import { TierParamsStruct } from "typechain-types/contracts/0.8.25/vaults/OperatorGrid";
+} from "typechain-types/index.js";
 
 import {
   advanceChainTime,
@@ -26,21 +26,21 @@ import {
   generateDepositStruct,
   generatePredeposit,
   generateValidator,
-  LocalMerkleTree,
+  type LocalMerkleTree,
   PDGPolicy,
   prepareLocalMerkleTree,
-} from "lib";
-import { mEqual } from "lib/promise";
+} from "lib/index.js";
+import { mEqual } from "lib/promise.js";
 import {
   createVaultProxyWithoutConnectingToVaultHub,
   getProtocolContext,
-  ProtocolContext,
+  type ProtocolContext,
   reportVaultDataWithProof,
   setupLidoForVaults,
   VAULT_CONNECTION_DEPOSIT,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { resetState, Snapshot } from "test/suite";
+import { resetState, Snapshot } from "test/suite/index.js";
 
 const VAULT_NODE_OPERATOR_FEE = 5_00n;
 const CONFIRM_EXPIRY = days(7n);
@@ -79,6 +79,9 @@ type ValidatorInfo = {
 
 resetState(
   describe("Scenario: Vault Happy Path with PDG Paused (Unguaranteed & Side Deposits)", () => {
+    let ethers: HardhatEthers;
+    let networkHelpers: NetworkHelpers;
+
     let ctx: ProtocolContext;
 
     // EOAs
@@ -116,6 +119,8 @@ resetState(
     const fundAmount = ether("200");
 
     before(async () => {
+      ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
       [, vaultOwner, nodeOperator, nodeOperatorManager, stranger] = await ethers.getSigners();
 
       ctx = await getProtocolContext();
@@ -124,7 +129,7 @@ resetState(
       agent = await ctx.getSigner("agent");
 
       await setupLidoForVaults(ctx);
-      await setBalance(nodeOperator.address, ether("100"));
+      await networkHelpers.setBalance(nodeOperator.address, ether("100"));
 
       const pdgIsPaused = await predepositGuarantee.isPaused();
       if (!pdgIsPaused) {

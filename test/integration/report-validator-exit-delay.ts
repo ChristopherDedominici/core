@@ -1,21 +1,23 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { advanceChainTime, ether, getCurrentBlockTimestamp, updateBeaconBlockRoot } from "lib";
-import { getProtocolContext, ProtocolContext } from "lib/protocol";
+import { advanceChainTime, ether, getCurrentBlockTimestamp, updateBeaconBlockRoot } from "lib/index.js";
+import { getProtocolContext, type ProtocolContext } from "lib/protocol/index.js";
 
 import {
   encodeExitRequestsDataListWithFormat,
   toHistoricalHeaderWitness,
   toProvableBeaconBlockHeader,
   toValidatorWitness,
-} from "test/0.8.25/validatorExitDelayVerifierHelpers";
-import { ACTIVE_VALIDATOR_PROOF } from "test/0.8.25/validatorState";
-import { Snapshot } from "test/suite";
+} from "test/0.8.25/validatorExitDelayVerifierHelpers.js";
+import { ACTIVE_VALIDATOR_PROOF } from "test/0.8.25/validatorState.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Report Validator Exit Delay", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let rootSnapshot: string;
   let beforeEachSnapshot: string;
@@ -25,6 +27,8 @@ describe("Integration: Report Validator Exit Delay", () => {
   const moduleId = 1; // NOR module ID
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     rootSnapshot = await Snapshot.take();
 
@@ -128,7 +132,7 @@ describe("Integration: Report Validator Exit Delay", () => {
       encodedExitRequests,
     );
 
-    await expect(tx).to.not.be.reverted;
+    await expect(tx).to.not.revert(ethers);
     await expect(tx).to.not.emit(nor, "ValidatorExitStatusUpdated");
   });
 
@@ -199,7 +203,7 @@ describe("Integration: Report Validator Exit Delay", () => {
       encodedExitRequests,
     );
 
-    await expect(tx).to.not.be.reverted;
+    await expect(tx).to.not.revert(ethers);
     await expect(tx).to.not.emit(nor, "ValidatorExitStatusUpdated");
   });
 
@@ -239,7 +243,7 @@ describe("Integration: Report Validator Exit Delay", () => {
       encodedExitRequests,
     );
 
-    await expect(tx).to.not.be.reverted;
+    await expect(tx).to.not.revert(ethers);
     await expect(tx).to.emit(nor, "ValidatorExitStatusUpdated");
 
     const futureBlockRootTimestamp = await updateBeaconBlockRoot(ACTIVE_VALIDATOR_PROOF.futureBeaconBlockHeaderRoot);
@@ -251,7 +255,7 @@ describe("Integration: Report Validator Exit Delay", () => {
       encodedExitRequests,
     );
 
-    await expect(tx2).to.not.be.reverted;
+    await expect(tx2).to.not.revert(ethers);
     await expect(tx2).to.not.emit(nor, "ValidatorExitStatusUpdated");
   });
 

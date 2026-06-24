@@ -1,16 +1,26 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { type HardhatEthers, type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { HashConsensus__Harness, ValidatorsExitBus__Harness, ValidatorsExitBusOracle } from "typechain-types";
+import type {
+  HashConsensus__Harness,
+  ValidatorsExitBus__Harness,
+  ValidatorsExitBusOracle,
+} from "typechain-types/index.js";
 
-import { SECONDS_PER_SLOT, VEBO_CONSENSUS_VERSION } from "lib";
+import { SECONDS_PER_SLOT, VEBO_CONSENSUS_VERSION } from "lib/constants.js";
 
-import { deployVEBO, initVEBO } from "test/deploy";
+import { deployVEBO, initVEBO } from "test/deploy/index.js";
 
 describe("ValidatorsExitBusOracle.sol:deploy", () => {
+  let ethers: HardhatEthers;
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
+
   context("Deployment and initial configuration", () => {
     let admin: HardhatEthersSigner;
     let defaultOracle: ValidatorsExitBusOracle;

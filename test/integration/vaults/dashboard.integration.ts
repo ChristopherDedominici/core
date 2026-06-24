@@ -1,11 +1,19 @@
 import { expect } from "chai";
 import { hexlify, MaxUint256, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
 import { SecretKey } from "@chainsafe/blst";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Dashboard, Lido, PredepositGuarantee, SSZBLSHelpers, StakingVault, VaultHub, WstETH } from "typechain-types";
+import type {
+  Dashboard,
+  Lido,
+  PredepositGuarantee,
+  SSZBLSHelpers,
+  StakingVault,
+  VaultHub,
+  WstETH,
+} from "typechain-types/index.js";
 
 import {
   advanceChainTime,
@@ -13,14 +21,14 @@ import {
   ether,
   generateDepositStruct,
   generateValidator,
-  LocalMerkleTree,
+  type LocalMerkleTree,
   mEqual,
   PDGPolicy,
   prepareLocalMerkleTree,
   randomAddress,
   randomValidatorPubkey,
   TOTAL_BASIS_POINTS,
-} from "lib";
+} from "lib/index.js";
 import {
   autofillRoles,
   calculateLockedValue,
@@ -28,13 +36,13 @@ import {
   ensurePredepositGuaranteeUnpaused,
   getProtocolContext,
   getPubkeys,
-  ProtocolContext,
+  type ProtocolContext,
   reportVaultDataWithProof,
   setupLidoForVaults,
-  VaultRoles,
-} from "lib/protocol";
+  type VaultRoles,
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 // EIP-7528 ETH address
 const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
@@ -47,6 +55,8 @@ type ValidatorInfo = {
 };
 
 describe("Integration: Dashboard Full Coverage", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -70,6 +80,8 @@ describe("Integration: Dashboard Full Coverage", () => {
   let beaconBlockHeader: SSZBLSHelpers.BeaconBlockHeaderStruct;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     originalSnapshot = await Snapshot.take();
 

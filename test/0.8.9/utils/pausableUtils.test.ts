@@ -1,14 +1,22 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { PausableUntil__Harness } from "typechain-types";
+import type { PausableUntil__Harness } from "typechain-types/index.js";
 
-import { MAX_UINT256 } from "lib";
+import { MAX_UINT256 } from "lib/constants.js";
 
 describe("PausableUtils.sol", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let pausable: PausableUntil__Harness;
+
+  before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+  });
 
   beforeEach(async () => {
     pausable = await ethers.deployContract("PausableUntil__Harness");
@@ -29,7 +37,7 @@ describe("PausableUtils.sol", () => {
       it("Does not revert if contract is paused", async () => {
         await expect(pausable.harness__pauseFor(1000n)).to.emit(pausable, "Paused");
 
-        await expect(pausable.modifierWhenPaused()).to.not.be.reverted;
+        await expect(pausable.modifierWhenPaused()).to.not.revert(ethers);
       });
     });
 
@@ -41,7 +49,7 @@ describe("PausableUtils.sol", () => {
       });
 
       it("Does not revert if contract is not paused", async () => {
-        await expect(pausable.modifierWhenResumed()).to.not.be.reverted;
+        await expect(pausable.modifierWhenResumed()).to.not.revert(ethers);
       });
     });
   });
@@ -65,7 +73,7 @@ describe("PausableUtils.sol", () => {
 
     it("Returns the duration since the contract was paused", async () => {
       await pausable.harness__pauseFor(1000n);
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       expect(await pausable.getResumeSinceTimestamp()).to.equal(timestamp + 1000);
     });
@@ -103,7 +111,7 @@ describe("PausableUtils.sol", () => {
     });
 
     it("Pauses contract correctly and emits `Paused` event", async () => {
-      const timestamp = await time.latest();
+      const timestamp = await networkHelpers.time.latest();
 
       await expect(pausable.harness__pauseUntil(timestamp + 1000))
         .to.emit(pausable, "Paused")
@@ -141,7 +149,7 @@ describe("PausableUtils.sol", () => {
     let timestamp: number;
 
     beforeEach(async () => {
-      timestamp = await time.latest();
+      timestamp = await networkHelpers.time.latest();
     });
 
     it("Pauses the contract", async () => {

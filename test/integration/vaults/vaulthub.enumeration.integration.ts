@@ -1,22 +1,24 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { StakingVault, VaultHub } from "typechain-types";
+import type { StakingVault, VaultHub } from "typechain-types/index.js";
 
-import { ether } from "lib";
+import { ether } from "lib/index.js";
 import {
   createVaultWithDashboard,
   getProtocolContext,
-  ProtocolContext,
+  type ProtocolContext,
   reportVaultDataWithProof,
   setupLidoForVaults,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: VaultHub enumeration functions", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -29,6 +31,8 @@ describe("Integration: VaultHub enumeration functions", () => {
   let nodeOperator: HardhatEthersSigner;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     originalSnapshot = await Snapshot.take();
 
@@ -118,8 +122,8 @@ describe("Integration: VaultHub enumeration functions", () => {
 
       await dashboard.connect(owner1).fund({ value: ether("1") });
 
-      await expect(vaultHub.vaultByIndex(baseVaultsCount + 2n)).to.be.reverted;
-      await expect(vaultHub.vaultByIndex(baseVaultsCount + 1000n)).to.be.reverted;
+      await expect(vaultHub.vaultByIndex(baseVaultsCount + 2n)).to.revert(ethers);
+      await expect(vaultHub.vaultByIndex(baseVaultsCount + 1000n)).to.revert(ethers);
     });
 
     it("returns correct vault address by index", async () => {

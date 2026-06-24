@@ -1,8 +1,8 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { EIP7251MaxEffectiveBalanceRequest__Mock } from "typechain-types";
+import type { EIP7251MaxEffectiveBalanceRequest__Mock } from "typechain-types/index.js";
 
-import { log } from "lib";
+import { log } from "../log.js";
 
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7251.md#execution-layer
 export const EIP7251_ADDRESS = "0x0000BBdDc7CE488642fb579F8B00f3a590007251";
@@ -11,6 +11,7 @@ export const EIP7251_MIN_CONSOLIDATION_FEE = 1n;
 export const deployEIP7251MaxEffectiveBalanceRequestContract = async (
   fee: bigint,
 ): Promise<EIP7251MaxEffectiveBalanceRequest__Mock> => {
+  const { ethers } = await hre.network.getOrCreate();
   const eip7251Mock = await ethers.deployContract("EIP7251MaxEffectiveBalanceRequest__Mock");
   const eip7251MockAddress = await eip7251Mock.getAddress();
 
@@ -23,6 +24,7 @@ export const deployEIP7251MaxEffectiveBalanceRequestContract = async (
 };
 
 export const ensureEIP7251MaxEffectiveBalanceRequestContractPresent = async (): Promise<void> => {
+  const { ethers } = await hre.network.getOrCreate();
   const code = await ethers.provider.getCode(EIP7251_ADDRESS);
 
   if (code === "0x") {

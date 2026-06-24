@@ -1,11 +1,13 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { certainAddress, ether, findEventsWithInterfaces, impersonate } from "lib";
-import { getProtocolContext, ProtocolContext } from "lib/protocol";
-import { randomPubkeys, randomSignatures } from "lib/protocol/helpers/staking-module";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { bailOnFailure, Snapshot } from "test/suite";
+import { certainAddress, ether, findEventsWithInterfaces, impersonate } from "lib/index.js";
+import { randomPubkeys, randomSignatures } from "lib/protocol/helpers/staking-module.js";
+import { getProtocolContext, type ProtocolContext } from "lib/protocol/index.js";
+
+import { bailOnFailure, Snapshot } from "test/suite/index.js";
 
 type NodeOperatorState = {
   active: boolean;
@@ -68,11 +70,15 @@ function verifyNodeOperatorSummaryStateChanges(
 }
 
 describe("Scenario: Node operators happy path", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
 
   let snapshot: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
 
     snapshot = await Snapshot.take();

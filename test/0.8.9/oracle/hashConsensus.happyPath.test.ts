@@ -1,10 +1,12 @@
 import { expect } from "chai";
-import { Signer } from "ethers";
-import { ethers } from "hardhat";
+import { type Signer } from "ethers";
+import hre from "hardhat";
 
-import { HashConsensus__Harness, ReportProcessor__Mock } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { BASE_CONSENSUS_VERSION, EPOCHS_PER_FRAME, SECONDS_PER_SLOT, SLOTS_PER_EPOCH } from "lib";
+import type { HashConsensus__Harness, ReportProcessor__Mock } from "typechain-types/index.js";
+
+import { BASE_CONSENSUS_VERSION, EPOCHS_PER_FRAME, SECONDS_PER_SLOT, SLOTS_PER_EPOCH } from "lib/constants.js";
 
 import {
   computeEpochFirstSlotAt,
@@ -18,11 +20,13 @@ import {
   SECONDS_PER_FRAME,
   SLOTS_PER_FRAME,
   ZERO_HASH,
-} from "test/deploy";
+} from "test/deploy/index.js";
 
 const INITIAL_EPOCH = 3n;
 
 describe("HashConsensus.sol:happyPath", function () {
+  let ethers: HardhatEthers;
+
   let admin: Signer;
   let member1: Signer;
   let member2: Signer;
@@ -31,6 +35,8 @@ describe("HashConsensus.sol:happyPath", function () {
   let reportProcessor: ReportProcessor__Mock;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, member1, member2, member3] = await ethers.getSigners();
     const deployed = await deployHashConsensus(await admin.getAddress(), { initialEpoch: INITIAL_EPOCH });
     consensus = deployed.consensus;

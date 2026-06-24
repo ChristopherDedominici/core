@@ -1,23 +1,26 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { beforeEach } from "mocha";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Dashboard, OperatorGrid, VaultHub } from "typechain-types";
+import type { Dashboard, OperatorGrid, VaultHub } from "typechain-types/index.js";
 
-import { days, ether, impersonate } from "lib";
+import { days, ether, impersonate } from "lib/index.js";
 import {
   createVaultWithDashboard,
   getProtocolContext,
-  ProtocolContext,
+  type ProtocolContext,
   setupLidoForVaults,
   testMethod,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: OperatorGrid Roles and Access Control", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -35,6 +38,8 @@ describe("Integration: OperatorGrid Roles and Access Control", () => {
   let dashboard: Dashboard;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     originalSnapshot = await Snapshot.take();
 

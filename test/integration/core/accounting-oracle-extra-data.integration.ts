@@ -1,22 +1,26 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { advanceChainTime, ether, findEventsWithInterfaces, hexToBytes, RewardDistributionState } from "lib";
-import { EXTRA_DATA_FORMAT_LIST, KeyType, prepareExtraData, setAnnualBalanceIncreaseLimit } from "lib/oracle";
-import { getProtocolContext, OracleReportParams, ProtocolContext, report } from "lib/protocol";
-import { reportWithoutExtraData, waitNextAvailableReportTime } from "lib/protocol/helpers/accounting";
-import { NOR_MODULE_ID } from "lib/protocol/helpers/staking-module";
+import { advanceChainTime, ether, findEventsWithInterfaces, hexToBytes, RewardDistributionState } from "lib/index.js";
+import { EXTRA_DATA_FORMAT_LIST, type KeyType, prepareExtraData, setAnnualBalanceIncreaseLimit } from "lib/oracle.js";
+import { reportWithoutExtraData, waitNextAvailableReportTime } from "lib/protocol/helpers/accounting.js";
+import { NOR_MODULE_ID } from "lib/protocol/helpers/staking-module.js";
+import { getProtocolContext, type OracleReportParams, type ProtocolContext, report } from "lib/protocol/index.js";
 
-import { MAX_BASIS_POINTS, Snapshot } from "test/suite";
+import { MAX_BASIS_POINTS, Snapshot } from "test/suite/index.js";
 
 const MODULE_ID = NOR_MODULE_ID;
 const NUM_NEWLY_EXITED_VALIDATORS = 1n;
 const MAINNET_NOR_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5".toLowerCase();
 
 describe("Integration: AccountingOracle extra data", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let ctx: ProtocolContext;
   let stranger: HardhatEthersSigner;
 
@@ -26,11 +30,13 @@ describe("Integration: AccountingOracle extra data", () => {
   let exitedKeys: KeyType;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     snapshot = await Snapshot.take();
 
     [stranger] = await ethers.getSigners();
-    await setBalance(stranger.address, ether("1000000"));
+    await networkHelpers.setBalance(stranger.address, ether("1000000"));
 
     async function getExitedCount(nodeOperatorId: bigint): Promise<bigint> {
       const { nor } = ctx.contracts;

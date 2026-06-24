@@ -1,14 +1,20 @@
-import { ContractFactory, ContractTransactionReceipt, Signer } from "ethers";
-import { ethers } from "hardhat";
-import { FactoryOptions } from "hardhat/types";
+import { type ContractFactory, type ContractTransactionReceipt, type Signer } from "ethers";
+import hre from "hardhat";
 
-import { LidoLocator } from "typechain-types";
+import type { FactoryOptions } from "@nomicfoundation/hardhat-ethers/types";
 
-import { addContractHelperFields, DeployedContract, getContractPath, loadContract, LoadedContract } from "lib/contract";
-import { ConvertibleToString, cy, log, yl } from "lib/log";
-import { incrementGasUsed, Sk, updateObjectInState } from "lib/state-file";
+import type { LidoLocator } from "typechain-types/index.js";
 
-import { keysOf } from "./protocol/types";
+import {
+  addContractHelperFields,
+  type DeployedContract,
+  getContractPath,
+  loadContract,
+  type LoadedContract,
+} from "./contract.js";
+import { type ConvertibleToString, cy, log, yl } from "./log.js";
+import { keysOf } from "./protocol/types.js";
+import { incrementGasUsed, Sk, updateObjectInState } from "./state-file.js";
 
 const GAS_PRIORITY_FEE = process.env.GAS_PRIORITY_FEE || null;
 const GAS_MAX_FEE = process.env.GAS_MAX_FEE || null;
@@ -43,12 +49,13 @@ export async function makeTx(
 
   const receipt = await tx.wait();
   const gasUsed = receipt.gasUsed;
-  incrementGasUsed(gasUsed, withStateFile);
+  await incrementGasUsed(gasUsed, withStateFile);
 
   return receipt;
 }
 
 async function getDeployTxParams(deployer: string) {
+  const { ethers } = await hre.network.getOrCreate();
   const deployerSigner = await ethers.provider.getSigner();
   if (deployer !== deployerSigner.address) {
     throw new Error("DEPLOYER set in ENV must correspond to the first signer of hardhat");
@@ -73,6 +80,7 @@ async function deployContractType2(
   withStateFile = true,
   signerOrOptions?: Signer | FactoryOptions,
 ): Promise<DeployedContract> {
+  const { ethers } = await hre.network.getOrCreate();
   const txParams = await getDeployTxParams(deployer);
   const factory = (await ethers.getContractFactory(artifactName, signerOrOptions)) as ContractFactory;
   const contract = await factory.deploy(...constructorArgs, txParams);
@@ -89,7 +97,7 @@ async function deployContractType2(
   }
 
   const gasUsed = receipt.gasUsed;
-  incrementGasUsed(gasUsed, withStateFile);
+  await incrementGasUsed(gasUsed, withStateFile);
   (contract as DeployedContract).deploymentGasUsed = gasUsed;
   (contract as DeployedContract).deploymentTx = tx.hash;
 
@@ -128,7 +136,7 @@ export async function deployWithoutProxy(
 
   if (withStateFile) {
     const contractPath = await getContractPath(artifactName);
-    updateObjectInState(nameInState, {
+    await updateObjectInState(nameInState, {
       contract: contractPath,
       [addressFieldName]: contract.address,
       constructorArgs,
@@ -152,7 +160,7 @@ export async function deployImplementation(
   const contract = await deployContract(artifactName, constructorArgs, deployer, withStateFile, signerOrOptions);
 
   if (withStateFile) {
-    updateObjectInState(nameInState, {
+    await updateObjectInState(nameInState, {
       implementation: {
         contract: contract.contractPath,
         address: contract.address,
@@ -192,7 +200,7 @@ export async function deployBehindOssifiableProxy(
   const proxy = await deployContract(PROXY_CONTRACT_NAME, proxyConstructorArgs, deployer, withStateFile);
 
   if (withStateFile) {
-    updateObjectInState(nameInState, {
+    await updateObjectInState(nameInState, {
       proxy: {
         contract: await getContractPath(PROXY_CONTRACT_NAME),
         address: proxy.address,
@@ -228,7 +236,7 @@ export async function updateProxyImplementation(
   await makeTx(proxy, "proxy__upgradeTo", [implementation.address], { from: proxyOwner });
 
   if (withStateFile) {
-    updateObjectInState(nameInState, {
+    await updateObjectInState(nameInState, {
       implementation: {
         contract: implementation.contractPath,
         address: implementation.address,
@@ -239,6 +247,7 @@ export async function updateProxyImplementation(
 }
 
 async function getLocatorConfig(locatorAddress: string) {
+  const { ethers } = await hre.network.getOrCreate();
   const locator = await ethers.getContractAt("LidoLocator", locatorAddress);
 
   const locatorKeys = keysOf<LidoLocator.ConfigStruct>()([

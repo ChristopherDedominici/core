@@ -1,19 +1,22 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ZeroAddress } from "ethers";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   StakingRouter__MockForTWG,
   TriggerableWithdrawalsGateway__Harness,
   WithdrawalVault__MockForTWG,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { advanceChainTime, getCurrentBlockTimestamp, streccak } from "lib";
+import { streccak } from "lib/keccak.js";
+import { advanceChainTime, getCurrentBlockTimestamp } from "lib/time.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
-import { deployLidoLocator, updateLidoLocatorImplementation } from "../deploy/locator";
+import { deployLidoLocator, updateLidoLocatorImplementation } from "../deploy/locator.js";
 
 const PAUSE_ROLE = streccak("PAUSE_ROLE");
 const RESUME_ROLE = streccak("RESUME_ROLE");
@@ -37,9 +40,11 @@ const exitRequests = [
   { moduleId: 2, nodeOpId: 0, valIndex: 1, valPubkey: PUBKEYS[2] },
 ];
 
-const ZERO_ADDRESS = ethers.ZeroAddress;
+const ZERO_ADDRESS = ZeroAddress;
 
 describe("TriggerableWithdrawalsGateway.sol:triggerFullWithdrawals", () => {
+  let ethers: HardhatEthers;
+
   let triggerableWithdrawalsGateway: TriggerableWithdrawalsGateway__Harness;
   let withdrawalVault: WithdrawalVault__MockForTWG;
   let stakingRouter: StakingRouter__MockForTWG;
@@ -58,6 +63,8 @@ describe("TriggerableWithdrawalsGateway.sol:triggerFullWithdrawals", () => {
   };
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, authorizedEntity, stranger] = await ethers.getSigners();
 
     const locator = await deployLidoLocator();

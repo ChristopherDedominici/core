@@ -1,21 +1,28 @@
 import { expect } from "chai";
-import { MaxUint256, Signer } from "ethers";
-import { ethers } from "hardhat";
+import { MaxUint256, type Signer } from "ethers";
+import hre from "hardhat";
 
-import { HashConsensus, ReportProcessor__Mock } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { BASE_CONSENSUS_VERSION, findEventsWithInterfaces } from "lib";
+import type { HashConsensus, ReportProcessor__Mock } from "typechain-types/index.js";
 
-import { deployHashConsensus, DeployHashConsensusParams, HASH_1, ZERO_HASH } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { BASE_CONSENSUS_VERSION } from "lib/constants.js";
+import { findEventsWithInterfaces } from "lib/event.js";
+
+import { deployHashConsensus, type DeployHashConsensusParams, HASH_1, ZERO_HASH } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("HashConsensus.sol:setQuorum", function () {
+  let ethers: HardhatEthers;
+
   let admin: Signer;
   let member1: Signer;
   let member2: Signer;
   let member3: Signer;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, member1, member2, member3] = await ethers.getSigners();
   });
 

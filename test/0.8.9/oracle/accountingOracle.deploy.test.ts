@@ -1,28 +1,41 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   Accounting__MockForAccountingOracle,
   AccountingOracle,
   AccountingOracle__Harness,
   HashConsensus__Harness,
   StakingRouter__MockForAccountingOracle,
   WithdrawalQueue__MockForAccountingOracle,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { AO_CONSENSUS_VERSION, EPOCHS_PER_FRAME, GENESIS_TIME, SECONDS_PER_SLOT, SLOTS_PER_EPOCH } from "lib";
+import {
+  AO_CONSENSUS_VERSION,
+  EPOCHS_PER_FRAME,
+  GENESIS_TIME,
+  SECONDS_PER_SLOT,
+  SLOTS_PER_EPOCH,
+} from "lib/constants.js";
 
 import {
   deployAccountingOracleSetup,
   deployAndConfigureAccountingOracle,
   initAccountingOracle,
   ORACLE_LAST_COMPLETED_EPOCH,
-} from "test/deploy";
+} from "test/deploy/index.js";
 
 describe("AccountingOracle.sol:deploy", () => {
+  let ethers: HardhatEthers;
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
+
   context("Deployment and initial configuration", () => {
     let admin: HardhatEthersSigner;
     let defaultOracle: AccountingOracle;

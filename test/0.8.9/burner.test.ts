@@ -1,26 +1,31 @@
 import { expect } from "chai";
 import { MaxUint256, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { before, beforeEach } from "mocha";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { type HardhatEthers, type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   Burner,
   Burner__MockForMigration,
   ERC20__Harness,
   ERC721__Harness,
   LidoLocator,
-  OssifiableProxy__factory,
   StETH__Harness,
-} from "typechain-types";
+} from "typechain-types/index.js";
+import { OssifiableProxy__factory } from "typechain-types/index.js";
 
-import { batch, certainAddress, ether, impersonate } from "lib";
+import { impersonate } from "lib/account.js";
+import { certainAddress } from "lib/address.js";
+import { batch } from "lib/promise.js";
+import { ether } from "lib/units.js";
 
-import { deployLidoLocator } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployLidoLocator } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Burner.sol", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
   let holder: HardhatEthersSigner;
@@ -59,6 +64,8 @@ describe("Burner.sol", () => {
   }
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, admin, holder, stranger] = await ethers.getSigners();
 
     locator = await deployLidoLocator({ treasury, accounting }, deployer);

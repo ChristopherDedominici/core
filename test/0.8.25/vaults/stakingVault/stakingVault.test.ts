@@ -1,35 +1,31 @@
 import { expect } from "chai";
 import { toChecksumAddress } from "ethereumjs-util";
-import { ContractTransactionReceipt, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import { type ContractTransactionReceipt, ZeroAddress } from "ethers";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   DepositContract__MockForStakingVault,
   EIP7002WithdrawalRequest__Mock,
   EthRejector,
   StakingVault,
-  StakingVault__factory,
   WETH9__MockForVault,
-} from "typechain-types";
+} from "typechain-types/index.js";
+import { StakingVault__factory } from "typechain-types/index.js";
 
-import {
-  certainAddress,
-  computeDepositDataRoot,
-  de0x,
-  EIP7002_MIN_WITHDRAWAL_REQUEST_FEE,
-  ether,
-  MAX_UINT256,
-  ONE_GWEI,
-  proxify,
-  randomAddress,
-  streccak,
-} from "lib";
-import { getPubkeys } from "lib/protocol";
+import { certainAddress, randomAddress } from "lib/address.js";
+import { MAX_UINT256, ONE_GWEI } from "lib/constants.js";
+import { computeDepositDataRoot } from "lib/deposit.js";
+import { EIP7002_MIN_WITHDRAWAL_REQUEST_FEE } from "lib/eips/eip7002.js";
+import { streccak } from "lib/keccak.js";
+import { getPubkeys } from "lib/protocol/helpers/vaults.js";
+import { proxify } from "lib/proxy.js";
+import { de0x } from "lib/string.js";
+import { ether } from "lib/units.js";
 
-import { deployEIP7002WithdrawalRequestContractMock } from "test/0.8.9/withdrawalVault/eip7002Mock";
-import { Snapshot } from "test/suite";
+import { deployEIP7002WithdrawalRequestContractMock } from "test/0.8.9/withdrawalVault/eip7002Mock.js";
+import { Snapshot } from "test/suite/index.js";
 
 const SAMPLE_PUBKEY = "0x" + "ab".repeat(48);
 const INVALID_PUBKEY = "0x" + "ab".repeat(47);
@@ -39,6 +35,8 @@ const encodeEip7002Input = (pubkey: string, amount: bigint): string => {
 };
 
 describe("StakingVault.sol", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let vaultOwner: HardhatEthersSigner;
   let operator: HardhatEthersSigner;
@@ -55,6 +53,8 @@ describe("StakingVault.sol", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, vaultOwner, operator, depositor, stranger] = await ethers.getSigners();
     depositContract = await ethers.deployContract("DepositContract__MockForStakingVault");
 
@@ -204,6 +204,7 @@ describe("StakingVault.sol", () => {
     it("accepts ether", async () => {
       const amount = ether("1");
       await expect(vaultOwner.sendTransaction({ to: stakingVault, value: amount })).to.changeEtherBalance(
+        ethers,
         stakingVault,
         amount,
       );
@@ -225,7 +226,7 @@ describe("StakingVault.sol", () => {
 
     it("accepts ether", async () => {
       const amount = ether("1");
-      await expect(stakingVault.fund({ value: amount })).to.changeEtherBalance(stakingVault, amount);
+      await expect(stakingVault.fund({ value: amount })).to.changeEtherBalance(ethers, stakingVault, amount);
     });
   });
 
@@ -273,7 +274,7 @@ describe("StakingVault.sol", () => {
       const recipient = certainAddress("recipient");
       const tx = await stakingVault.withdraw(recipient, amount);
       await expect(tx).to.emit(stakingVault, "EtherWithdrawn").withArgs(recipient, amount);
-      await expect(tx).to.changeEtherBalance(recipient, amount);
+      await expect(tx).to.changeEtherBalance(ethers, recipient, amount);
     });
   });
 

@@ -1,25 +1,33 @@
 import { expect } from "chai";
 import { MaxUint256, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import {
-  Burner,
-  Burner__MockForMigration,
+  type Burner,
+  type Burner__MockForMigration,
   ICSModule__factory,
-  Lido__HarnessForFinalizeUpgradeV3,
-  LidoLocator,
+  type Lido__HarnessForFinalizeUpgradeV3,
+  type LidoLocator,
   OssifiableProxy__factory,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { certainAddress, ether, getStorageAtPosition, impersonate, proxify, TOTAL_BASIS_POINTS } from "lib";
+import { impersonate } from "lib/account.js";
+import { certainAddress } from "lib/address.js";
+import { TOTAL_BASIS_POINTS } from "lib/constants.js";
+import { proxify } from "lib/proxy.js";
+import { getStorageAtPosition } from "lib/storage.js";
+import { ether } from "lib/units.js";
 
-import { deployLidoLocator } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployLidoLocator } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Lido.sol:finalizeUpgrade_v3", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let deployer: HardhatEthersSigner;
 
   let impl: Lido__HarnessForFinalizeUpgradeV3;
@@ -47,6 +55,7 @@ describe("Lido.sol:finalizeUpgrade_v3", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
     [deployer] = await ethers.getSigners();
     impl = await ethers.deployContract("Lido__HarnessForFinalizeUpgradeV3");
     [lido] = await proxify({ impl, admin: deployer });
@@ -93,7 +102,7 @@ describe("Lido.sol:finalizeUpgrade_v3", () => {
 
   context("initialized", () => {
     before(async () => {
-      const latestBlock = BigInt(await time.latestBlock());
+      const latestBlock = BigInt(await networkHelpers.time.latestBlock());
 
       await lido.connect(deployer).harness_initialize_v2(locator, { value: initialValue });
 
@@ -161,7 +170,7 @@ describe("Lido.sol:finalizeUpgrade_v3", () => {
           [nodeOperatorsRegistryAddress, simpleDvtAddress, csmAccountingAddress, withdrawalQueueAddress],
           0,
         ),
-      ).to.not.be.reverted;
+      ).to.not.revert(ethers);
 
       expect(await lido.getLidoLocator()).to.equal(locator);
       expect(await lido.getTotalShares()).to.equal(totalShares);

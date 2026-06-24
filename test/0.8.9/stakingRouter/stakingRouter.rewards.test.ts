@@ -1,17 +1,22 @@
 import { expect } from "chai";
 import { hexlify, randomBytes } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { StakingModule__MockForStakingRouter, StakingRouter } from "typechain-types";
+import type { StakingModule__MockForStakingRouter, StakingRouter } from "typechain-types/index.js";
 
-import { certainAddress, ether, proxify } from "lib";
-import { TOTAL_BASIS_POINTS } from "lib/constants";
+import { certainAddress } from "lib/address.js";
+import { TOTAL_BASIS_POINTS } from "lib/constants.js";
+import { proxify } from "lib/proxy.js";
+import { ether } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("StakingRouter.sol:rewards", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let admin: HardhatEthersSigner;
 
@@ -30,13 +35,16 @@ describe("StakingRouter.sol:rewards", () => {
   };
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, admin] = await ethers.getSigners();
 
     const depositContract = await ethers.deployContract("DepositContract__MockForBeaconChainDepositor", deployer);
     const allocLib = await ethers.deployContract("MinFirstAllocationStrategy", deployer);
     const stakingRouterFactory = await ethers.getContractFactory("StakingRouter", {
       libraries: {
-        ["contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]: await allocLib.getAddress(),
+        ["project/contracts/common/lib/MinFirstAllocationStrategy.sol:MinFirstAllocationStrategy"]:
+          await allocLib.getAddress(),
       },
     });
 

@@ -1,17 +1,22 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { ACL, Lido } from "typechain-types";
+import type { ACL } from "typechain-types/@aragon/os/contracts/acl/ACL.js";
+import { type Lido } from "typechain-types/index.js";
 
-import { ether, impersonate } from "lib";
+import { impersonate } from "lib/account.js";
+import { ether } from "lib/units.js";
 
-import { deployLidoDao } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployLidoDao } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Lido.sol:mintburning", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;
   let accounting: HardhatEthersSigner;
@@ -22,6 +27,8 @@ describe("Lido.sol:mintburning", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, user] = await ethers.getSigners();
 
     ({ lido, acl } = await deployLidoDao({ rootAccount: deployer, initialized: true }));

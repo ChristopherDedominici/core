@@ -1,28 +1,31 @@
 import { expect } from "chai";
 import { ContractTransactionReceipt, Result, TransactionResponse, ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { advanceChainTime, batch, ether, impersonate, log, updateBalance } from "lib";
+import { advanceChainTime, batch, ether, impersonate, log, updateBalance } from "lib/index.js";
 import {
   finalizeWQViaElVault,
   getProtocolContext,
   norSdvtEnsureOperators,
-  OracleReportParams,
-  ProtocolContext,
+  type OracleReportParams,
+  type ProtocolContext,
   removeStakingLimit,
   report,
   setStakingLimit,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { bailOnFailure, MAX_DEPOSIT, Snapshot, ZERO_HASH } from "test/suite";
+import { bailOnFailure, MAX_DEPOSIT, Snapshot, ZERO_HASH } from "test/suite/index.js";
 
-import { LogDescriptionExtended } from "../../../lib/protocol/types";
+import { type LogDescriptionExtended } from "../../../lib/protocol/types.js";
 
 const AMOUNT = ether("100");
 
 describe("Scenario: Protocol Happy Path", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
 
@@ -34,6 +37,8 @@ describe("Scenario: Protocol Happy Path", () => {
   let depositCount: bigint;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
 
     [stEthHolder, stranger] = await ethers.getSigners();

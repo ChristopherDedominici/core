@@ -1,13 +1,15 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { AbiCoder, keccak256 } from "ethers";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { HashConsensus__Harness, ValidatorsExitBus__Harness } from "typechain-types";
+import type { HashConsensus__Harness, ValidatorsExitBus__Harness } from "typechain-types/index.js";
 
-import { de0x, numberToHex } from "lib";
+import { de0x, numberToHex } from "lib/string.js";
 
-import { DATA_FORMAT_LIST, deployVEBO, initVEBO } from "test/deploy";
+import { DATA_FORMAT_LIST, deployVEBO, initVEBO } from "test/deploy/index.js";
 
 // -----------------------------------------------------------------------------
 // Constants & helpers
@@ -47,12 +49,12 @@ const encodeExitRequestsDataList = (requests: ExitRequest[]) => {
 };
 
 const hashExitRequest = (request: { dataFormat: number; data: string }) => {
-  return ethers.keccak256(
-    ethers.AbiCoder.defaultAbiCoder().encode(["bytes", "uint256"], [request.data, request.dataFormat]),
-  );
+  return keccak256(AbiCoder.defaultAbiCoder().encode(["bytes", "uint256"], [request.data, request.dataFormat]));
 };
 
 describe("ValidatorsExitBusOracle.sol:submitExitRequestsData", () => {
+  let ethers: HardhatEthers;
+
   let consensus: HashConsensus__Harness;
   let oracle: ValidatorsExitBus__Harness;
   let admin: HardhatEthersSigner;
@@ -86,6 +88,10 @@ describe("ValidatorsExitBusOracle.sol:submitExitRequestsData", () => {
       lastProcessingRefSlot: LAST_PROCESSING_REF_SLOT,
     });
   };
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   describe("Common case", () => {
     // tests in this section related to ExitRequestsData mistakes

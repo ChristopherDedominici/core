@@ -1,27 +1,31 @@
 import { expect } from "chai";
 import { encodeBytes32String } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import type { ACL } from "typechain-types/@aragon/os/contracts/acl/ACL.js";
+import type { Kernel } from "typechain-types/@aragon/os/contracts/kernel/Kernel.js";
+import { type NodeOperatorsRegistryLibraryAddresses } from "typechain-types/factories/contracts/0.4.24/nos/NodeOperatorsRegistry.sol/NodeOperatorsRegistry__factory.js";
 import {
-  ACL,
-  Kernel,
-  Lido,
-  LidoLocator,
+  type Lido,
+  type LidoLocator,
   LidoLocator__factory,
   MinFirstAllocationStrategy__factory,
-  NodeOperatorsRegistry__Harness,
+  type NodeOperatorsRegistry__Harness,
   NodeOperatorsRegistry__Harness__factory,
-} from "typechain-types";
-import { NodeOperatorsRegistryLibraryAddresses } from "typechain-types/factories/contracts/0.4.24/nos/NodeOperatorsRegistry.sol/NodeOperatorsRegistry__factory";
+} from "typechain-types/index.js";
 
-import { addNodeOperator, certainAddress, NodeOperatorConfig, RewardDistributionState } from "lib";
+import { certainAddress } from "lib/address.js";
+import { addNodeOperator, type NodeOperatorConfig, RewardDistributionState } from "lib/nor.js";
 
-import { addAragonApp, deployLidoDao } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { addAragonApp, deployLidoDao } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("NodeOperatorsRegistry.sol:ExitManager", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
@@ -67,6 +71,8 @@ describe("NodeOperatorsRegistry.sol:ExitManager", () => {
   const exitType = 1n;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [deployer, user, stakingRouter, nodeOperatorsManager, signingKeysManager, stranger] = await ethers.getSigners();
 
     ({ lido, dao, acl } = await deployLidoDao({
@@ -79,7 +85,7 @@ describe("NodeOperatorsRegistry.sol:ExitManager", () => {
 
     const allocLib = await new MinFirstAllocationStrategy__factory(deployer).deploy();
     const allocLibAddr: NodeOperatorsRegistryLibraryAddresses = {
-      ["__contracts/common/lib/MinFirstAllocat__"]: await allocLib.getAddress(),
+      ["__project/contracts/common/lib/MinFirs__"]: await allocLib.getAddress(),
     };
 
     impl = await new NodeOperatorsRegistry__Harness__factory(allocLibAddr, deployer).deploy();
@@ -174,7 +180,7 @@ describe("NodeOperatorsRegistry.sol:ExitManager", () => {
         .connect(stakingRouter)
         .reportValidatorExitDelay(firstNodeOperatorId, proofSlotTimestamp, testPublicKey, eligibleToExitInSec);
 
-      await expect(tx).to.not.be.reverted;
+      await expect(tx).to.not.revert(ethers);
       await expect(tx).to.not.emit(nor, "ValidatorExitStatusUpdated");
     });
   });
@@ -264,8 +270,8 @@ describe("NodeOperatorsRegistry.sol:ExitManager", () => {
     let cutoff: bigint;
 
     beforeEach(async () => {
-      await deployer.provider.send("hardhat_mine", [
-        `0x${(BigInt(await deployer.provider.getBlockNumber()) + 3000n).toString(16)}`,
+      await ethers.provider.send("hardhat_mine", [
+        `0x${(BigInt(await ethers.provider.getBlockNumber()) + 3000n).toString(16)}`,
         12000,
       ]);
 
@@ -277,7 +283,7 @@ describe("NodeOperatorsRegistry.sol:ExitManager", () => {
       cutoff = BigInt(await nor.exitPenaltyCutoffTimestamp());
 
       // Get the block timestamp of the transaction
-      const block = await deployer.provider.getBlock(tx.blockNumber!);
+      const block = await ethers.provider.getBlock(tx.blockNumber!);
       const expectedCutoff = BigInt(block!.timestamp) - exitDeadlineThreshold - reportingWindow;
 
       // Ensure cutoff was set correctly

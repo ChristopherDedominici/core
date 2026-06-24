@@ -1,30 +1,34 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import type { ACL } from "typechain-types/@aragon/os/contracts/acl/ACL.js";
 import {
-  ACL,
-  Burner__MockForAccounting,
+  type Burner__MockForAccounting,
   Burner__MockForAccounting__factory,
-  Lido,
-  LidoExecutionLayerRewardsVault__MockForLidoAccounting,
+  type Lido,
+  type LidoExecutionLayerRewardsVault__MockForLidoAccounting,
   LidoExecutionLayerRewardsVault__MockForLidoAccounting__factory,
-  LidoLocator,
+  type LidoLocator,
   LidoLocator__factory,
-  StakingRouter__MockForLidoAccounting,
+  type StakingRouter__MockForLidoAccounting,
   StakingRouter__MockForLidoAccounting__factory,
-  WithdrawalQueue__MockForAccounting,
+  type WithdrawalQueue__MockForAccounting,
   WithdrawalQueue__MockForAccounting__factory,
-  WithdrawalVault__MockForLidoAccounting,
+  type WithdrawalVault__MockForLidoAccounting,
   WithdrawalVault__MockForLidoAccounting__factory,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { ether, getNextBlockTimestamp, impersonate, updateBalance } from "lib";
+import { impersonate, updateBalance } from "lib/account.js";
+import { getNextBlockTimestamp } from "lib/time.js";
+import { ether } from "lib/units.js";
 
-import { deployLidoDao } from "test/deploy";
+import { deployLidoDao } from "test/deploy/index.js";
 
 describe("Lido:accounting", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
 
@@ -37,6 +41,10 @@ describe("Lido:accounting", () => {
   let burner: Burner__MockForAccounting;
   let elRewardsVault: LidoExecutionLayerRewardsVault__MockForLidoAccounting;
   let withdrawalVault: WithdrawalVault__MockForLidoAccounting;
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   beforeEach(async () => {
     [deployer, stranger] = await ethers.getSigners();

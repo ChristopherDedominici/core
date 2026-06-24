@@ -1,17 +1,24 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { PositiveTokenRebaseLimiter__Harness } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { ether, MAX_UINT256 } from "lib";
+import type { PositiveTokenRebaseLimiter__Harness } from "typechain-types/test/0.8.9/contracts/PositiveTokenRebaseLimiter__Harness.js";
+
+import { MAX_UINT256 } from "lib/constants.js";
+import { ether } from "lib/units.js";
 
 const LIMITER_PRECISION_BASE = 1000000000n;
 const MAX_UINT64 = 2n ** 64n - 1n;
 
 describe("PositiveTokenRebaseLimiter.sol", () => {
+  let ethers: HardhatEthers;
+
   let limiter: PositiveTokenRebaseLimiter__Harness;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     limiter = await ethers.deployContract("PositiveTokenRebaseLimiter__Harness");
   });
 

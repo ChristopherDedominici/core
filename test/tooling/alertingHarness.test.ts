@@ -1,24 +1,27 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
+import type {
   AlertingHarness,
   LazyOracle__MockForVaultHub,
   Lido,
   LidoLocator,
   StakingVault__MockForVaultHub,
   VaultHub,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
-import { ether } from "lib";
+import { ether } from "lib/units.js";
 
-import { deployVaults } from "test/deploy/vaults";
-import { Snapshot } from "test/suite";
+import { deployVaults } from "test/deploy/vaults.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("AlertingHarness.sol", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;
   let operator: HardhatEthersSigner;
@@ -48,6 +51,7 @@ describe("AlertingHarness.sol", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
     [deployer, user, operator] = await ethers.getSigners();
 
     const vaultsSetup = await deployVaults({ deployer, admin: user });

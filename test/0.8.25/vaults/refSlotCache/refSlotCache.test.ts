@@ -1,11 +1,15 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HashConsensus__Mock, RefSlotCacheTest } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Snapshot } from "test/suite";
+import type { HashConsensus__Mock, RefSlotCacheTest } from "typechain-types/index.js";
+
+import { Snapshot } from "test/suite/index.js";
 
 describe("RefSlotCache.sol", () => {
+  let ethers: HardhatEthers;
+
   let consensus: HashConsensus__Mock;
   let refSlotCacheTest: RefSlotCacheTest;
 
@@ -14,6 +18,8 @@ describe("RefSlotCache.sol", () => {
   const DEFAULT_INITIAL_REF_SLOT = 100n;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     consensus = await ethers.deployContract("HashConsensus__Mock", [DEFAULT_INITIAL_REF_SLOT]);
 
     refSlotCacheTest = await ethers.deployContract("RefSlotCacheTest", [consensus]);

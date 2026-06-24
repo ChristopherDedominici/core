@@ -1,18 +1,23 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { Packed64x4__Harness } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Snapshot } from "test/suite";
+import type { Packed64x4__Harness } from "typechain-types/index.js";
+
+import { Snapshot } from "test/suite/index.js";
 
 const OVER_UINT64_MAX = 2n ** 64n;
 
 describe("Packed64x4.sol", () => {
+  let ethers: HardhatEthers;
+
   let packed: Packed64x4__Harness;
 
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
     packed = await ethers.deployContract("Packed64x4__Harness");
   });
 

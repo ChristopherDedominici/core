@@ -1,17 +1,20 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance, time } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Lido, WithdrawalQueueERC721 } from "typechain-types";
+import type { Lido, WithdrawalQueueERC721 } from "typechain-types/index.js";
 
-import { ether, findEventsWithInterfaces } from "lib";
-import { finalizeWQViaSubmit, getProtocolContext, ProtocolContext, report } from "lib/protocol";
+import { ether, findEventsWithInterfaces } from "lib/index.js";
+import { finalizeWQViaSubmit, getProtocolContext, type ProtocolContext, report } from "lib/protocol/index.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Withdrawal edge cases", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalState: string;
@@ -21,6 +24,8 @@ describe("Integration: Withdrawal edge cases", () => {
   let wq: WithdrawalQueueERC721;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     lido = ctx.contracts.lido;
     wq = ctx.contracts.withdrawalQueue;
@@ -28,7 +33,7 @@ describe("Integration: Withdrawal edge cases", () => {
     snapshot = await Snapshot.take();
 
     [, holder] = await ethers.getSigners();
-    await setBalance(holder.address, ether("1000000"));
+    await networkHelpers.setBalance(holder.address, ether("1000000"));
 
     await finalizeWQViaSubmit(ctx);
   });
@@ -49,7 +54,9 @@ describe("Integration: Withdrawal edge cases", () => {
 
       const stethInitialBalance = await lido.balanceOf(holder.address);
 
-      await report(ctx, { clDiff: ether("-1"), excludeVaultsBalances: true });
+      // reportBurner: false — pre-existing Burner cover/non-cover shares on the fork would
+      // burn during the report and produce a positive rebase that masks the clDiff we set.
+      await report(ctx, { clDiff: ether("-1"), excludeVaultsBalances: true, reportBurner: false });
 
       const stethFirstNegativeReportBalance = await lido.balanceOf(holder.address);
 
@@ -62,7 +69,7 @@ describe("Integration: Withdrawal edge cases", () => {
       const [firstRequestEvent] = findEventsWithInterfaces(firstRequestReceipt!, "WithdrawalRequested", [wq.interface]);
       const firstRequestId = firstRequestEvent!.args.requestId;
 
-      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true, reportBurner: false });
 
       const stethSecondNegativeReportBalance = await lido.balanceOf(holder.address);
 
@@ -85,7 +92,7 @@ describe("Integration: Withdrawal edge cases", () => {
       expect(firstStatus.amountOfStETH).to.equal(secondStatus.amountOfStETH);
       expect(firstStatus.amountOfShares).to.be.lt(secondStatus.amountOfShares);
 
-      await report(ctx, { clDiff: ether("0.0001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.0001"), excludeVaultsBalances: true, reportBurner: false });
 
       expect(await wq.isBunkerModeActive()).to.be.false;
 
@@ -120,7 +127,7 @@ describe("Integration: Withdrawal edge cases", () => {
       // Submit initial stETH deposit
       await lido.connect(holder).submit(ethers.ZeroAddress, { value: amount });
 
-      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true, reportBurner: false });
 
       // Create withdrawal request
       await lido.connect(holder).approve(wq.target, amount);
@@ -131,9 +138,9 @@ describe("Integration: Withdrawal edge cases", () => {
       const requestIds = [requestId];
 
       // Skip next report by waiting extra time
-      const timeBeforeMissedReport = await time.latest();
-      await time.increase(24 * 60 * 60); // 24 hours
-      const timeAfterMissedReport = await time.latest();
+      const timeBeforeMissedReport = await networkHelpers.time.latest();
+      await networkHelpers.time.increase(24 * 60 * 60); // 24 hours
+      const timeAfterMissedReport = await networkHelpers.time.latest();
 
       // Check request not finalized after missed report
       const [status] = await wq.getWithdrawalStatus([...requestIds]);
@@ -141,7 +148,7 @@ describe("Integration: Withdrawal edge cases", () => {
       expect(status.isFinalized).to.be.false;
 
       // Submit next report to finalize request
-      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true, reportBurner: false });
 
       // Verify request finalized
       const [finalizedStatus] = await wq.getWithdrawalStatus([...requestIds]);
@@ -176,7 +183,7 @@ describe("Integration: Withdrawal edge cases", () => {
       await lido.connect(holder).submit(ethers.ZeroAddress, { value: amount });
 
       // First rebase - positive
-      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.001"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.false;
 
       // Create first withdrawal request
@@ -188,7 +195,7 @@ describe("Integration: Withdrawal edge cases", () => {
 
     it("should handle second (negative) rebase correctly", async () => {
       // Second rebase - negative
-      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.true;
 
       // Verify first request finalized
@@ -206,7 +213,7 @@ describe("Integration: Withdrawal edge cases", () => {
 
     it("should handle third (negative) rebase correctly", async () => {
       // Third rebase - negative
-      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("-0.1"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.true;
 
       // Create third withdrawal request
@@ -218,7 +225,7 @@ describe("Integration: Withdrawal edge cases", () => {
 
     it("should handle fourth (positive) rebase correctly", async () => {
       // Fourth rebase - positive
-      await report(ctx, { clDiff: ether("0.0000001"), excludeVaultsBalances: true });
+      await report(ctx, { clDiff: ether("0.0000001"), excludeVaultsBalances: true, reportBurner: false });
       expect(await wq.isBunkerModeActive()).to.be.false;
 
       // Verify all requests finalized

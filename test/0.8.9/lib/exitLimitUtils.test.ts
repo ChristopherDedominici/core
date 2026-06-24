@@ -1,7 +1,9 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { ExitLimitUtils__Harness, ExitLimitUtilsStorage__Harness } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+
+import type { ExitLimitUtils__Harness, ExitLimitUtilsStorage__Harness } from "typechain-types/index.js";
 
 interface ExitRequestLimitData {
   maxExitRequestsLimit: bigint;
@@ -12,10 +14,14 @@ interface ExitRequestLimitData {
 }
 
 describe("ExitLimitUtils.sol", () => {
+  let ethers: HardhatEthers;
+
   let exitLimitStorage: ExitLimitUtilsStorage__Harness;
   let exitLimit: ExitLimitUtils__Harness;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     exitLimitStorage = await ethers.deployContract("ExitLimitUtilsStorage__Harness");
     exitLimit = await ethers.deployContract("ExitLimitUtils__Harness");
   });

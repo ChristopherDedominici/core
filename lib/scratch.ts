@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { log } from "./log";
+import { log } from "./log.js";
 
 class StepsFileNotFoundError extends Error {
   constructor(filePath: string) {
@@ -33,6 +33,8 @@ async function applySteps(steps: string[]) {
     return; // All steps have been deployed
   }
 
+  const { ethers } = await hre.network.getOrCreate();
+
   for (const step of steps) {
     const migrationFile = resolveMigrationFile(step);
 
@@ -45,7 +47,7 @@ async function applySteps(steps: string[]) {
 
 export async function deployUpgrade(networkName: string, stepsFile: string): Promise<void> {
   // Hardhat network is a fork of mainnet so we need to use the mainnet-fork steps
-  if (networkName === "hardhat") {
+  if (networkName === "default") {
     networkName = "mainnet-fork";
   }
 

@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import { hexlify } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
 import { SecretKey } from "@chainsafe/blst";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import {
+import type { TierParamsStruct } from "typechain-types/contracts/0.8.25/vaults/OperatorGrid.js";
+import type {
   Dashboard,
   LazyOracle,
   Lido,
@@ -16,9 +17,9 @@ import {
   StakingVault,
   VaultFactory,
   VaultHub,
-} from "typechain-types";
-import { TierParamsStruct } from "typechain-types/contracts/0.8.25/vaults/OperatorGrid";
+} from "typechain-types/index.js";
 
+import { TOTAL_BASIS_POINTS } from "lib/constants.js";
 import {
   advanceChainTime,
   certainAddress,
@@ -27,26 +28,25 @@ import {
   generateDepositStruct,
   generatePredeposit,
   generateValidator,
-  LocalMerkleTree,
+  type LocalMerkleTree,
   PDGPolicy,
   prepareLocalMerkleTree,
-} from "lib";
-import { TOTAL_BASIS_POINTS } from "lib/constants";
-import { mEqual } from "lib/promise";
+} from "lib/index.js";
+import { mEqual } from "lib/promise.js";
 import {
   createVaultProxyWithoutConnectingToVaultHub,
   ensurePredepositGuaranteeUnpaused,
   getProtocolContext,
   getReportTimeElapsed,
-  ProtocolContext,
+  type ProtocolContext,
   reportVaultDataWithProof,
   reportVaultsDataWithProof,
   setupLidoForVaults,
   VAULT_CONNECTION_DEPOSIT,
-} from "lib/protocol";
+} from "lib/protocol/index.js";
 
-import { resetState, Snapshot } from "test/suite";
-import { ONE_DAY } from "test/suite/constants";
+import { ONE_DAY } from "test/suite/constants.js";
+import { resetState, Snapshot } from "test/suite/index.js";
 
 const ONE_YEAR = 365n * ONE_DAY;
 
@@ -95,6 +95,9 @@ enum ValidatorStage {
 
 resetState(
   describe("Scenario: Node Operator Happy Path", () => {
+    let ethers: HardhatEthers;
+    let networkHelpers: NetworkHelpers;
+
     let ctx: ProtocolContext;
 
     // EOAs
@@ -174,6 +177,8 @@ resetState(
       }));
 
     before(async () => {
+      ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
       [
         ,
         vaultOwner,
@@ -193,7 +198,7 @@ resetState(
 
       await setupLidoForVaults(ctx);
       await ensurePredepositGuaranteeUnpaused(ctx);
-      await setBalance(nodeOperator.address, ether("100"));
+      await networkHelpers.setBalance(nodeOperator.address, ether("100"));
 
       slot = await predepositGuarantee.PIVOT_SLOT();
       mockCLtree = await prepareLocalMerkleTree(await predepositGuarantee.GI_FIRST_VALIDATOR_CURR());
@@ -915,7 +920,7 @@ resetState(
 
       // Send a big chunk of ETH to the vault to simulate large rewards
       const vaultAddress = await stakingVault.getAddress();
-      await setBalance(vaultAddress, (await ethers.provider.getBalance(vaultAddress)) + requiredReward);
+      await networkHelpers.setBalance(vaultAddress, (await ethers.provider.getBalance(vaultAddress)) + requiredReward);
 
       // Report the new totalValue with the large reward
       const newTotalValue = totalValue + requiredReward;

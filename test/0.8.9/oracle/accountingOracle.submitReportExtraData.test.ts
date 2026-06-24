@@ -1,42 +1,42 @@
 import { expect } from "chai";
-import { BigNumberish, ZeroHash } from "ethers";
-import { ethers } from "hardhat";
+import { type BigNumberish, ZeroHash } from "ethers";
+import hre from "hardhat";
 
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
-import {
+import type {
   AccountingOracle__Harness,
   HashConsensus__Harness,
   OracleReportSanityChecker,
   StakingRouter__MockForAccountingOracle,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
+import { AO_CONSENSUS_VERSION, ONE_GWEI } from "lib/constants.js";
 import {
-  AO_CONSENSUS_VERSION,
   calcExtraDataListHash,
   calcReportDataHash,
   constructOracleReport,
   encodeExtraDataItem,
   encodeExtraDataItems,
-  ether,
   EXTRA_DATA_FORMAT_EMPTY,
   EXTRA_DATA_FORMAT_LIST,
   EXTRA_DATA_TYPE_EXITED_VALIDATORS,
   EXTRA_DATA_TYPE_STUCK_VALIDATORS,
-  ExtraData,
-  ExtraDataType,
+  type ExtraData,
+  type ExtraDataType,
   getReportDataItems,
-  numberToHex,
-  ONE_GWEI,
-  OracleReport,
-  OracleReportProps,
+  type OracleReport,
+  type OracleReportProps,
   packExtraDataList,
-  ReportFieldsWithoutExtraData,
-} from "lib";
+  type ReportFieldsWithoutExtraData,
+} from "lib/oracle.js";
+import { numberToHex } from "lib/string.js";
+import { ether } from "lib/units.js";
 
-import { deployAndConfigureAccountingOracle } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployAndConfigureAccountingOracle } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 const getDefaultExtraData = (): ExtraDataType => ({
   exitedKeys: [
@@ -60,7 +60,7 @@ const getDefaultReportFields = (override = {}) => ({
   withdrawalFinalizationBatches: [1],
   simulatedShareRate: 10n ** 27n,
   isBunkerMode: true,
-  vaultsDataTreeRoot: ethers.ZeroHash,
+  vaultsDataTreeRoot: ZeroHash,
   vaultsDataTreeCid: "",
   extraDataFormat: EXTRA_DATA_FORMAT_LIST,
   extraDataHash: ZeroHash,
@@ -69,6 +69,8 @@ const getDefaultReportFields = (override = {}) => ({
 });
 
 describe("AccountingOracle.sol:submitReportExtraData", () => {
+  let ethers: HardhatEthers;
+
   let consensus: HashConsensus__Harness;
   let oracle: AccountingOracle__Harness;
   let oracleVersion: bigint;
@@ -80,6 +82,8 @@ describe("AccountingOracle.sol:submitReportExtraData", () => {
   let member1: HardhatEthersSigner;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, member1] = await ethers.getSigners();
     const deployed = await deployAndConfigureAccountingOracle(admin.address);
     oracle = deployed.oracle;

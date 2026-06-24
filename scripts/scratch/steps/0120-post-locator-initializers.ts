@@ -1,12 +1,13 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { loadContract } from "lib/contract";
-import { makeTx } from "lib/deploy";
-import { readNetworkState, Sk } from "lib/state-file";
+import { loadContract } from "lib/contract.js";
+import { makeTx } from "lib/deploy.js";
+import { readNetworkState, Sk } from "lib/state-file.js";
 
 export async function main() {
+  const { ethers } = await hre.network.getOrCreate();
   const deployer = (await ethers.provider.getSigner()).address;
-  const state = readNetworkState({ deployer });
+  const state = await readNetworkState({ deployer });
 
   // Extract addresses from state
   const lidoAddress = state[Sk.appLido].proxy.address;

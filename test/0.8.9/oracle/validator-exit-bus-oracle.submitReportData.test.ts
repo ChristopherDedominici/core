@@ -1,15 +1,20 @@
 import { expect } from "chai";
 import { ZeroHash } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { type HardhatEthers, type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { HashConsensus__Harness, OracleReportSanityChecker, ValidatorsExitBus__Harness } from "typechain-types";
+import type {
+  HashConsensus__Harness,
+  OracleReportSanityChecker,
+  ValidatorsExitBus__Harness,
+} from "typechain-types/index.js";
 
-import { de0x, numberToHex, VEBO_CONSENSUS_VERSION } from "lib";
+import { VEBO_CONSENSUS_VERSION } from "lib/constants.js";
+import { de0x, numberToHex } from "lib/string.js";
 
-import { computeTimestampAtSlot, DATA_FORMAT_LIST, deployVEBO, initVEBO } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { computeTimestampAtSlot, DATA_FORMAT_LIST, deployVEBO, initVEBO } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 const PUBKEYS = [
   "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -21,6 +26,8 @@ const PUBKEYS = [
 const HASH_1 = "0x1111111111111111111111111111111111111111111111111111111111111111";
 
 describe("ValidatorsExitBusOracle.sol:submitReportData", () => {
+  let ethers: HardhatEthers;
+
   let consensus: HashConsensus__Harness;
   let oracle: ValidatorsExitBus__Harness;
   let admin: HardhatEthersSigner;
@@ -119,6 +126,8 @@ describe("ValidatorsExitBusOracle.sol:submitReportData", () => {
   };
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, member1, member2, member3, stranger, authorizedEntity] = await ethers.getSigners();
 
     await deploy();

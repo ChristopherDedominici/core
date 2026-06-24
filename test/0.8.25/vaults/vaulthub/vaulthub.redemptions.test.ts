@@ -1,18 +1,21 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { describe } from "mocha";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { StakingVault__MockForVaultHub, VaultHub } from "typechain-types";
+import type { StakingVault__MockForVaultHub, VaultHub } from "typechain-types/index.js";
 
-import { ether } from "lib/units";
+import { ether } from "lib/units.js";
 
-import { deployVaults } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployVaults } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("VaultHub.sol:redemptions", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let vaultsContext: Awaited<ReturnType<typeof deployVaults>>;
   let vaultHub: VaultHub;
   let disconnectedVault: StakingVault__MockForVaultHub;
@@ -26,6 +29,8 @@ describe("VaultHub.sol:redemptions", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     [deployer, user, stranger, redemptionMaster] = await ethers.getSigners();
 
     vaultsContext = await deployVaults({ deployer, admin: user });
@@ -156,7 +161,7 @@ describe("VaultHub.sol:redemptions", () => {
       // Simulate that the vault has no balance on EL
       const vaultAddress = await connectedVault.getAddress();
       const vaultBalanceBefore = await ethers.provider.getBalance(vaultAddress);
-      await setBalance(vaultAddress, 0);
+      await networkHelpers.setBalance(vaultAddress, 0);
 
       // Report the vault with some fees, mint shares and set redemption shares to simulate that the vault has obligations
       await vaultsContext.reportVault({ vault: connectedVault, totalValue });
@@ -172,7 +177,7 @@ describe("VaultHub.sol:redemptions", () => {
       expect(record.redemptionShares).to.equal(redemptionShares);
 
       // Return the balance to the vault
-      await setBalance(vaultAddress, vaultBalanceBefore);
+      await networkHelpers.setBalance(vaultAddress, vaultBalanceBefore);
 
       // Settle the obligations and check that the deposits are unpaused
       await expect(vaultHub.forceRebalance(connectedVault))

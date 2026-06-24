@@ -1,18 +1,22 @@
 import { expect } from "chai";
 import { randomBytes } from "crypto";
 import { hexlify } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { getStorageAt } from "@nomicfoundation/hardhat-network-helpers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { NetworkHelpers } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { ERC1967Proxy__Harness, WithdrawalsManagerProxy__Mock } from "typechain-types";
+import type { ERC1967Proxy__Harness, WithdrawalsManagerProxy__Mock } from "typechain-types/index.js";
 
-import { certainAddress } from "lib";
+import { certainAddress } from "lib/address.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("WithdrawalsManagerProxy.sol:erc1967proxy", () => {
+  let ethers: HardhatEthers;
+  let networkHelpers: NetworkHelpers;
+
   let deployer: HardhatEthersSigner;
   let sender: HardhatEthersSigner;
 
@@ -22,6 +26,8 @@ describe("WithdrawalsManagerProxy.sol:erc1967proxy", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers, networkHelpers } = await hre.network.getOrCreate());
+
     [deployer, sender] = await ethers.getSigners();
 
     impl = await ethers.deployContract("WithdrawalsManagerProxy__Mock", deployer);
@@ -51,7 +57,7 @@ describe("WithdrawalsManagerProxy.sol:erc1967proxy", () => {
         deployer,
       );
 
-      expect(await getStorageAt(await proxy.getAddress(), slot)).to.equal(value);
+      expect(await networkHelpers.getStorageAt(await proxy.getAddress(), slot)).to.equal(value);
     });
 
     it("Set the implementation", async () => {

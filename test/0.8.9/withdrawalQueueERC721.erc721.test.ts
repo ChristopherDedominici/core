@@ -1,14 +1,22 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { ether } from "lib";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { deployWithdrawalQueue } from "test/deploy";
+import type { ERC721 } from "typechain-types/index.js";
 
-import { testERC721Compliance } from "../common/erc721.test";
+import { ether } from "lib/units.js";
+
+import { deployWithdrawalQueue } from "test/deploy/index.js";
+
+import { testERC721Compliance } from "../common/erc721.test.js";
+
+let ethers: HardhatEthers;
 
 testERC721Compliance({
   tokenName: "unstETH NFT",
   deploy: async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     const signers = await ethers.getSigners();
     const owner = signers[signers.length - 1];
 
@@ -28,7 +36,7 @@ testERC721Compliance({
     const holderTokenId = await queue.getLastRequestId();
 
     return {
-      token: queue,
+      token: queue as unknown as ERC721,
       name: deployed.name,
       symbol: deployed.symbol,
       holder: owner,

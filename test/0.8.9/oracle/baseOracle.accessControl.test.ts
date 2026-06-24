@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { BaseOracle__Harness, ConsensusContract__Mock } from "typechain-types";
+import type { BaseOracle__Harness, ConsensusContract__Mock } from "typechain-types/index.js";
 
 import {
   BASE_CONSENSUS_VERSION,
@@ -12,12 +13,14 @@ import {
   INITIAL_EPOCH,
   INITIAL_FAST_LANE_LENGTH_SLOTS,
   SECONDS_PER_SLOT,
-} from "lib";
+} from "lib/constants.js";
 
-import { deployBaseOracle, HASH_1, SECONDS_PER_EPOCH, SLOTS_PER_FRAME } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { deployBaseOracle, HASH_1, SECONDS_PER_EPOCH, SLOTS_PER_FRAME } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("BaseOracle.sol:accessControl", () => {
+  let ethers: HardhatEthers;
+
   let admin: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
   let manager: HardhatEthersSigner;
@@ -26,6 +29,8 @@ describe("BaseOracle.sol:accessControl", () => {
   let originalState: string;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, stranger, manager] = await ethers.getSigners();
 
     const deployed = await deployBaseOracle(admin);

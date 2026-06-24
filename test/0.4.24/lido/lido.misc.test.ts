@@ -1,22 +1,28 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import type { ACL } from "typechain-types/@aragon/os/contracts/acl/ACL.js";
 import {
-  ACL,
-  Lido,
-  LidoLocator,
-  StakingRouter__MockForLidoMisc,
-  WithdrawalQueue__MockForLidoMisc,
-} from "typechain-types";
+  type Lido,
+  type LidoLocator,
+  type StakingRouter__MockForLidoMisc,
+  type WithdrawalQueue__MockForLidoMisc,
+} from "typechain-types/index.js";
 
-import { batch, certainAddress, ether, impersonate, ONE_ETHER } from "lib";
+import { impersonate } from "lib/account.js";
+import { certainAddress } from "lib/address.js";
+import { batch } from "lib/promise.js";
+import { ether, ONE_ETHER } from "lib/units.js";
 
-import { deployLidoDao } from "test/deploy";
+import { deployLidoDao } from "test/deploy/index.js";
 
 describe("Lido.sol:misc", () => {
+  let ethers: HardhatEthers;
+
   let deployer: HardhatEthersSigner;
   let user: HardhatEthersSigner;
   let stranger: HardhatEthersSigner;
@@ -32,6 +38,10 @@ describe("Lido.sol:misc", () => {
 
   const elRewardsVaultBalance = ether("100.0");
   const withdrawalsVaultBalance = ether("100.0");
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   /// @notice structure of the test does not allow Snapshot usage
   beforeEach(async () => {

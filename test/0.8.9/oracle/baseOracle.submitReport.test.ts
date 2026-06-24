@@ -1,11 +1,12 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { BaseOracle__Harness, ConsensusContract__Mock } from "typechain-types";
+import type { BaseOracle__Harness, ConsensusContract__Mock } from "typechain-types/index.js";
 
-import { SECONDS_PER_SLOT } from "lib";
+import { SECONDS_PER_SLOT } from "lib/constants.js";
 
 import {
   deadlineFromRefSlot,
@@ -16,10 +17,12 @@ import {
   HASH_3,
   nextRefSlotFromRefSlot,
   ZERO_HASH,
-} from "test/deploy";
-import { Snapshot } from "test/suite";
+} from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 describe("BaseOracle.sol:submitReport", () => {
+  let ethers: HardhatEthers;
+
   let admin: HardhatEthersSigner;
 
   let originalState: string;
@@ -28,6 +31,8 @@ describe("BaseOracle.sol:submitReport", () => {
   let consensus: ConsensusContract__Mock;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin] = await ethers.getSigners();
 
     const deployed = await deployBaseOracle(admin, { initialEpoch: 1n });

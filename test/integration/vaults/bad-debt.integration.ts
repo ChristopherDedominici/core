@@ -1,16 +1,17 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers, HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Dashboard, StakingVault } from "typechain-types";
+import type { Dashboard, StakingVault } from "typechain-types/index.js";
 
-import { advanceChainTime, days, getCurrentBlockTimestamp, MAX_UINT256, SECONDS_PER_SLOT } from "lib";
+import { advanceChainTime, days, getCurrentBlockTimestamp, MAX_UINT256, SECONDS_PER_SLOT } from "lib/index.js";
+import { simulateReport } from "lib/protocol/helpers/accounting.js";
 import {
   createVaultWithDashboard,
   getProtocolContext,
   getReportTimeElapsed,
-  ProtocolContext,
+  type ProtocolContext,
   report,
   reportVaultDataWithProof,
   reportVaultsDataWithProof,
@@ -18,13 +19,14 @@ import {
   setupLidoForVaults,
   upDefaultTierShareLimit,
   waitNextAvailableReportTime,
-} from "lib/protocol";
-import { simulateReport } from "lib/protocol/helpers/accounting";
-import { ether } from "lib/units";
+} from "lib/protocol/index.js";
+import { ether } from "lib/units.js";
 
-import { Snapshot } from "test/suite";
+import { Snapshot } from "test/suite/index.js";
 
 describe("Integration: Vault with bad debt", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
   let snapshot: string;
   let originalSnapshot: string;
@@ -37,6 +39,8 @@ describe("Integration: Vault with bad debt", () => {
   let dashboard: Dashboard;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
     const { lido, stakingVaultFactory, vaultHub } = ctx.contracts;
     originalSnapshot = await Snapshot.take();
@@ -576,15 +580,21 @@ describe("Integration: Vault with bad debt", () => {
       const rebasedEvent = ctx.getEvents(receipt!, "TokenRebased")[0];
       const sharesMintedAsFees = rebasedEvent.args.sharesMintedAsFees;
 
+      // Burner may burn committed cover/non-cover shares during the report — that path is
+      // independent from bad-debt internalization but still moves total shares.
+      const sharesBurntEvents = ctx.getEvents(receipt!, "SharesBurnt");
+      const sharesBurnt = sharesBurntEvents.reduce((sum, ev) => sum + (ev.args.sharesAmount as bigint), 0n);
+
       expect(await vaultHub.badDebtToInternalize()).to.be.equal(0n, "Bad debt reset to 0");
       expect(await lido.getExternalShares()).to.be.equal(
         externalSharesBefore - badDebtShares,
         "External shares decreased",
       );
-      // Total shares increase only by minted fees (bad debt is transferred from external to internal, not creating new shares)
+      // Bad debt internalization moves shares from external to internal without changing total,
+      // so total shares delta = minted fees - shares burnt by the Burner.
       expect(await lido.getTotalShares()).to.be.equal(
-        totalSharesBefore + sharesMintedAsFees,
-        "Total shares increased exactly by minted fees",
+        totalSharesBefore + sharesMintedAsFees - sharesBurnt,
+        "Total shares delta matches minted fees minus burnt shares",
       );
     });
 

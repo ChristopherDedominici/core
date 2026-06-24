@@ -1,17 +1,21 @@
 import { expect } from "chai";
-import { Signer } from "ethers";
-import { ethers } from "hardhat";
+import { type Signer } from "ethers";
+import hre from "hardhat";
 
-import { HashConsensus__Harness, ReportProcessor__Mock } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { BASE_CONSENSUS_VERSION } from "lib";
+import type { HashConsensus__Harness, ReportProcessor__Mock } from "typechain-types/index.js";
 
-import { deployHashConsensus, HASH_1, HASH_2, ZERO_HASH } from "test/deploy";
-import { Snapshot } from "test/suite";
+import { BASE_CONSENSUS_VERSION } from "lib/constants.js";
+
+import { deployHashConsensus, HASH_1, HASH_2, ZERO_HASH } from "test/deploy/index.js";
+import { Snapshot } from "test/suite/index.js";
 
 const CONSENSUS_VERSION_NEW = 4n;
 
 describe("HashConsensus.sol:submitReport", function () {
+  let ethers: HardhatEthers;
+
   let admin: Signer;
   let member1: Signer;
   let member2: Signer;
@@ -28,6 +32,10 @@ describe("HashConsensus.sol:submitReport", function () {
     frame = await consensus.getCurrentFrame();
     await consensus.addMember(await member1.getAddress(), 1);
   };
+
+  before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+  });
 
   before(deploy);
 
@@ -79,8 +87,9 @@ describe("HashConsensus.sol:submitReport", function () {
       await consensus.connect(member1).submitReport(frame.refSlot, HASH_1, BASE_CONSENSUS_VERSION);
       await reportProcessor.startReportProcessing();
       await consensus.addMember(await member2.getAddress(), 2);
-      await expect(consensus.connect(member2).submitReport(frame.refSlot, HASH_1, BASE_CONSENSUS_VERSION)).not.to.be
-        .reverted;
+      await expect(
+        consensus.connect(member2).submitReport(frame.refSlot, HASH_1, BASE_CONSENSUS_VERSION),
+      ).not.to.revert(ethers);
     });
 
     it("consensus loss on conflicting report submit", async () => {

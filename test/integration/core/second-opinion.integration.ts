@@ -1,12 +1,14 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { SecondOpinionOracle__Mock } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { ether, impersonate, log, ONE_GWEI } from "lib";
-import { getProtocolContext, ProtocolContext, report } from "lib/protocol";
+import type { SecondOpinionOracle__Mock } from "typechain-types/index.js";
 
-import { bailOnFailure, Snapshot } from "test/suite";
+import { ether, impersonate, log, ONE_GWEI } from "lib/index.js";
+import { getProtocolContext, type ProtocolContext, report } from "lib/protocol/index.js";
+
+import { bailOnFailure, Snapshot } from "test/suite/index.js";
 
 const AMOUNT = ether("100");
 const MAX_DEPOSIT = 150n;
@@ -21,6 +23,8 @@ function getDiffAmount(totalSupply: bigint): bigint {
 }
 
 describe("Integration: Second opinion", () => {
+  let ethers: HardhatEthers;
+
   let ctx: ProtocolContext;
 
   let snapshot: string;
@@ -30,6 +34,8 @@ describe("Integration: Second opinion", () => {
   let totalSupply: bigint;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     ctx = await getProtocolContext();
 
     snapshot = await Snapshot.take();

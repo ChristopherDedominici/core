@@ -1,36 +1,34 @@
 import { expect } from "chai";
 import { ZeroHash } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { type HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
-import {
+import type {
   Accounting__MockForAccountingOracle,
   AccountingOracle__Harness,
   HashConsensus__Harness,
   StakingRouter__MockForAccountingOracle,
   WithdrawalQueue__MockForAccountingOracle,
-} from "typechain-types";
+} from "typechain-types/index.js";
 
+import { AO_CONSENSUS_VERSION, GENESIS_TIME, ONE_GWEI, SECONDS_PER_SLOT } from "lib/constants.js";
 import {
-  AO_CONSENSUS_VERSION,
   calcExtraDataListHash,
   calcReportDataHash,
   encodeExtraDataItems,
-  ether,
   EXTRA_DATA_FORMAT_EMPTY,
   EXTRA_DATA_FORMAT_LIST,
-  ExtraDataType,
-  GENESIS_TIME,
+  type ExtraDataType,
   getReportDataItems,
-  numberToHex,
-  ONE_GWEI,
-  OracleReport,
+  type OracleReport,
   packExtraDataList,
-  ReportAsArray,
-  SECONDS_PER_SLOT,
-} from "lib";
+  type ReportAsArray,
+} from "lib/oracle.js";
+import { numberToHex } from "lib/string.js";
+import { ether } from "lib/units.js";
 
 import {
   deployAndConfigureAccountingOracle,
@@ -39,9 +37,11 @@ import {
   SECONDS_PER_FRAME,
   SLOTS_PER_FRAME,
   timestampAtSlot,
-} from "test/deploy";
+} from "test/deploy/index.js";
 
 describe("AccountingOracle.sol:happyPath", () => {
+  let ethers: HardhatEthers;
+
   let consensus: HashConsensus__Harness;
   let oracle: AccountingOracle__Harness;
   let oracleVersion: number;
@@ -64,6 +64,8 @@ describe("AccountingOracle.sol:happyPath", () => {
   let stranger: HardhatEthersSigner;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     [admin, member1, member2, member3, stranger] = await ethers.getSigners();
 
     const deployed = await deployAndConfigureAccountingOracle(admin.address);

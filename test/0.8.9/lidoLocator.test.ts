@@ -1,10 +1,12 @@
 import { expect } from "chai";
 import { ZeroAddress } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { LidoLocator } from "typechain-types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { randomAddress } from "lib";
+import type { LidoLocator } from "typechain-types/index.js";
+
+import { randomAddress } from "lib/address.js";
 
 const services = [
   "accountingOracle",
@@ -49,10 +51,14 @@ function randomConfig(): Config {
 }
 
 describe("LidoLocator.sol", () => {
+  let ethers: HardhatEthers;
+
   const config = randomConfig();
   let locator: LidoLocator;
 
   before(async () => {
+    ({ ethers } = await hre.network.getOrCreate());
+
     locator = await ethers.deployContract("LidoLocator", [config]);
   });
 
@@ -71,7 +77,7 @@ describe("LidoLocator.sol", () => {
 
     it("Does not revert if `postTokenRebaseReceiver` is zero address", async () => {
       const randomConfiguration = randomConfig();
-      await expect(ethers.deployContract("LidoLocator", [randomConfiguration])).to.not.be.reverted;
+      await expect(ethers.deployContract("LidoLocator", [randomConfiguration])).to.not.revert(ethers);
     });
   });
 

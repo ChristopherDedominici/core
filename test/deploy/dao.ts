@@ -1,13 +1,16 @@
-import { BaseContract } from "ethers";
-import { ethers } from "hardhat";
+import { type BaseContract } from "ethers";
+import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Kernel, LidoLocator } from "typechain-types";
+import type { Kernel } from "typechain-types/@aragon/os/contracts/kernel/Kernel.js";
+import type { LidoLocator } from "typechain-types/index.js";
 
-import { ether, findEvents, streccak } from "lib";
+import { findEvents } from "lib/event.js";
+import { streccak } from "lib/keccak.js";
+import { ether } from "lib/units.js";
 
-import { deployLidoLocator } from "./locator";
+import { deployLidoLocator } from "./locator.js";
 
 interface CreateAddAppArgs {
   dao: Kernel;
@@ -23,6 +26,7 @@ interface DeployLidoDaoArgs {
 }
 
 async function createAragonDao(rootAccount: HardhatEthersSigner) {
+  const { ethers } = await hre.network.getOrCreate();
   const kernelBase = await ethers.deployContract("Kernel", [true], rootAccount);
   const aclBase = await ethers.deployContract("ACL", rootAccount);
   const evmScriptRegistryFactory = await ethers.deployContract("EVMScriptRegistryFactory", rootAccount);
@@ -60,6 +64,7 @@ export async function addAragonApp({ dao, name, impl, rootAccount }: CreateAddAp
 
 // TODO: extract initialization from this function
 export async function deployLidoDao({ rootAccount, initialized, locatorConfig = {} }: DeployLidoDaoArgs) {
+  const { ethers } = await hre.network.getOrCreate();
   const { dao, acl } = await createAragonDao(rootAccount);
 
   const impl = await ethers.deployContract("Lido", rootAccount);
@@ -83,6 +88,7 @@ export async function deployLidoDao({ rootAccount, initialized, locatorConfig = 
 }
 
 export async function deployLidoDaoForNor({ rootAccount, initialized, locatorConfig = {} }: DeployLidoDaoArgs) {
+  const { ethers } = await hre.network.getOrCreate();
   const { dao, acl } = await createAragonDao(rootAccount);
 
   const impl = await ethers.deployContract("Lido__HarnessForDistributeReward", rootAccount);
