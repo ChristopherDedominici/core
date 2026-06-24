@@ -50,6 +50,9 @@ export default defineConfig({
     mocha: {
       timeout: 20 * 60 * 1000, // 20 minutes
       rootHooks: mochaRootHooks,
+      // Run unit tests in parallel. Integration tests set MODE and fork mainnet,
+      // so keep them sequential to avoid opening many forks at once.
+      parallel: process.env.MODE === undefined,
     },
   },
   paths: {

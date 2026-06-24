@@ -687,7 +687,7 @@ describe("Integration: LazyOracle", () => {
           liabilityShares: snapshotLiab,
           maxLiabilityShares: snapshotMaxLiab,
         }),
-      ).to.not.be.reverted;
+      ).to.not.revert(ethers);
     });
 
     it("oracle cannot inflate record.maxLiabilityShares beyond on-chain value", async () => {
